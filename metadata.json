@@ -1,0 +1,6 @@
+{
+  "name": "Ronimotors Automóveis",
+  "description": "Plataforma de compra e venda de veículos seminovos e novos da Ronimotors Automóveis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
