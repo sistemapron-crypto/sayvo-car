@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Car, PhoneCall } from 'lucide-react';
+import { Car, PhoneCall, Menu, X } from 'lucide-react';
 import { RonimotorsLogo } from './RonimotorsLogo';
 import { getStoreConfig } from '../../services/storeService';
 
@@ -16,13 +16,14 @@ export const Header: React.FC<HeaderProps> = ({
   const isVehiclesActive = currentRoute === '/' || currentRoute.startsWith('/veiculo');
 
   const [whatsapp, setWhatsapp] = useState('');
-  const [nomeLoja, setNomeLoja] = useState('');
+  const [corPrimaria, setCorPrimaria] = useState('#aeee02');
+  const [menuAberto, setMenuAberto] = useState(false);
 
   useEffect(() => {
     getStoreConfig()
       .then((config) => {
         setWhatsapp(config.whatsapp || '');
-        setNomeLoja(config.nomeLoja || '');
+        setCorPrimaria(config.corPrimaria || '#aeee02');
       })
       .catch((error) => {
         console.error('Erro ao carregar configurações da loja:', error);
@@ -48,28 +49,68 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               onClick={() => onNavigate('/')}
               className={`flex items-center gap-2 text-sm font-semibold transition-colors py-2 px-1 relative cursor-pointer ${isVehiclesActive
-                  ? 'text-violet-700 font-semibold'
-                  : 'text-slate-600 hover:text-slate-950'
+                ? 'text-[var(--cor-primaria)] font-semibold'
+                : 'text-slate-600 hover:text-slate-950'
                 }`}
             >
-              <Car className="w-4 h-4 text-violet-600" />
+              <Car
+                className="w-4 h-4"
+                style={{ color: corPrimaria }}
+              />
               <span>Veículos</span>
               {isVehiclesActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-full" />
+                <span
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                  style={{ backgroundColor: corPrimaria }}
+                />
               )}
             </button>
           </nav>
 
           {/* Right Area: Store Phone Contact */}
           <div className="flex items-center gap-3">
+            {/* Desktop */}
             <a
               href={`tel:${whatsapp.replace(/\D/g, '')}`}
-              className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-violet-700 transition-colors px-3 py-2 rounded-lg bg-slate-50 hover:bg-violet-50 border border-slate-200/80 shadow-2xs"
+              className="hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-[var(--cor-primaria)] transition-colors px-3 py-2 rounded-lg bg-slate-50 hover:bg-[color-mix(in_srgb,var(--cor-primaria)_8%,white)] border border-slate-200/80 shadow-2xs"
             >
-              <PhoneCall className="w-4 h-4 text-violet-600" />
-              <span className="hidden sm:inline">{whatsapp}</span>
-              <span className="sm:hidden">Ligar</span>
+              <PhoneCall
+                className="w-4 h-4"
+                style={{ color: corPrimaria }}
+              />
+              <span>{whatsapp}</span>
             </a>
+
+            {/* Mobile */}
+            <button
+              type="button"
+              onClick={() => setMenuAberto(!menuAberto)}
+              className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 border border-white/20 text-white transition-colors"
+              aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
+            >
+              {menuAberto ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+
+            {/* Mobile Contact Menu */}
+            {menuAberto && (
+              <div className="absolute top-full right-4 mt-2 w-44 rounded-xl bg-black border border-white/10 shadow-lg overflow-hidden sm:hidden">
+                <a
+                  href={`tel:${whatsapp.replace(/\D/g, '')}`}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                  onClick={() => setMenuAberto(false)}
+                >
+                  <PhoneCall
+                    className="w-4 h-4"
+                    style={{ color: corPrimaria }}
+                  />
+                  <span>Ligar</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

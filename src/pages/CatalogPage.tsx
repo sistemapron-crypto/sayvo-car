@@ -105,9 +105,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
           }}
         />
 
-        {/* Page Title: "Nosso Estoque" */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mt-1 mb-6">
-          Nosso Estoque
+        {/* Page Title: "Seu próximo carro está aqui" */}
+        <h1 className="text-1xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mt-1 mb-6">
+          SEU PRÓXIMO CARRO ESTÁ AQUI
         </h1>
 
         {/* Mobile Search and Filter Button Row matching Reference 2 */}

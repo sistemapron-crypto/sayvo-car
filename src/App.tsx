@@ -7,6 +7,7 @@ import { LoginModal } from './components/auth/LoginModal';
 import { CatalogPage } from './pages/CatalogPage';
 import { DetailPage } from './pages/DetailPage';
 import { Vehicle, VehicleFilters } from './types/vehicle';
+import { getStoreConfig } from './services/storeService';
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>('/');
@@ -30,6 +31,20 @@ export default function App() {
       // Ignore localStorage errors
     }
   }, [favorites]);
+
+  // Carrega a cor principal da loja e aplica globalmente
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        document.documentElement.style.setProperty(
+          '--cor-primaria',
+          config.corPrimaria || '#aeee02'
+        );
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar cor primária:', error);
+      });
+  }, []);
 
   // Handle route navigation
   const navigateTo = (route: string, vehicle?: Vehicle, filters?: Partial<VehicleFilters>) => {
@@ -59,7 +74,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-sans antialiased text-slate-900 selection:bg-violet-100 selection:text-violet-900">
+    <div className="min-h-screen flex flex-col bg-white font-sans antialiased text-slate-900 selection:bg-[var(--cor-primaria)] selection:text-slate-900">
       {/* Top Header */}
       {/* Top Header */}
       <div className="sticky top-0 z-50 bg-transparent">

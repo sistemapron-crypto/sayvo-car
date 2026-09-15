@@ -51,7 +51,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="text-xs font-semibold text-slate-400 hover:text-violet-700 transition-colors cursor-pointer"
+          className="text-xs font-semibold text-slate-400 hover:text-[var(--cor-primaria)] transition-colors cursor-pointer"
         >
           Limpar
         </button>
@@ -71,14 +71,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 blindadoOnly: !filters.blindadoOnly,
               })
             }
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-              filters.blindadoOnly ? 'bg-violet-600' : 'bg-slate-200'
-            }`}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${filters.blindadoOnly ? 'bg-[var(--cor-primaria)]' : 'bg-slate-200'
+              }`}
           >
             <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                filters.blindadoOnly ? 'translate-x-5' : 'translate-x-0'
-              }`}
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${filters.blindadoOnly ? 'translate-x-5' : 'translate-x-0'
+                }`}
             />
           </button>
         </div>
@@ -101,7 +99,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => toggleBrand(name)}
-                      className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer accent-[#5B21B6]"
+                      className="w-4 h-4 rounded border-slate-300 text-[var(--cor-primaria)] focus:ring-[var(--cor-primaria)] cursor-pointer"
                     />
                     <span className={isChecked ? 'font-semibold text-slate-900' : ''}>{name}</span>
                   </div>
@@ -121,7 +119,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </div>
           <div className="flex items-center justify-between text-xs text-slate-500 font-medium mb-2">
             <span>R$ 0</span>
-            <span className="text-violet-700 font-semibold">{formatCurrency(currentMaxPrice)}</span>
+            <span className="text-[var(--cor-primaria)] font-semibold">{formatCurrency(currentMaxPrice)}</span>
           </div>
 
           <div className="relative pt-1">
@@ -132,7 +130,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               step="10000"
               value={currentMaxPrice}
               onChange={handlePriceChange}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#5B21B6]"
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[var(--cor-primaria)]"
             />
           </div>
         </div>
@@ -152,7 +150,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     minAno: e.target.value ? Number(e.target.value) : undefined,
                   })
                 }
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-violet-600 cursor-pointer"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-[var(--cor-primaria)] cursor-pointer"
               >
                 <option value="">Min</option>
                 {YEAR_OPTIONS.map((year) => (
@@ -172,7 +170,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     maxAno: e.target.value ? Number(e.target.value) : undefined,
                   })
                 }
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-violet-600 cursor-pointer"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-[var(--cor-primaria)] cursor-pointer"
               >
                 <option value="">Máx</option>
                 {YEAR_OPTIONS.map((year) => (
@@ -198,7 +196,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 combustível: e.target.value,
               })
             }
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-violet-600 cursor-pointer"
+            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-[var(--cor-primaria)] cursor-pointer"
           >
             {FUEL_OPTIONS.map((fuel) => (
               <option key={fuel} value={fuel}>
@@ -221,7 +219,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 transmissão: e.target.value,
               })
             }
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-violet-600 cursor-pointer"
+            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-hidden focus:border-[var(--cor-primaria)] focus:ring-1 focus:ring-[var(--cor-primaria)] cursor-pointer"
           >
             {TRANSMISSION_OPTIONS.map((trans) => (
               <option key={trans} value={trans}>

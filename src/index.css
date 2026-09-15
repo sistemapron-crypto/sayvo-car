@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+:root {
+  --cor-primaria: #aeee02;
+}
+
+/* Busca de veículos */
+
+.search-bar-input {
+  border-color: var(--search-highlight);
+}
+
+.search-bar-input:hover {
+  border-color: var(--search-highlight);
+}
+
+.search-bar-input:focus {
+  border-color: var(--search-highlight);
+  box-shadow: 0 0 0 2px color-mix(
+    in srgb,
+    var(--search-highlight) 15%,
+    transparent
+  );
+}

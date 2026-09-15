@@ -83,14 +83,12 @@ export const MobileFiltersModal: React.FC<MobileFiltersModalProps> = ({
                   blindadoOnly: !filters.blindadoOnly,
                 })
               }
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                filters.blindadoOnly ? 'bg-violet-600' : 'bg-slate-200'
-              }`}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${filters.blindadoOnly ? 'bg-[var(--cor-primaria)]' : 'bg-slate-200'
+                }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                  filters.blindadoOnly ? 'translate-x-5' : 'translate-x-0'
-                }`}
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${filters.blindadoOnly ? 'translate-x-5' : 'translate-x-0'
+                  }`}
               />
             </button>
           </div>
@@ -101,7 +99,10 @@ export const MobileFiltersModal: React.FC<MobileFiltersModalProps> = ({
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Faixa de Preço
               </label>
-              <span className="text-xs text-violet-700 font-bold">
+              <span
+                className="text-xs font-bold"
+                style={{ color: 'var(--cor-primaria)' }}
+              >
                 Até {formatCurrency(currentMaxPrice)}
               </span>
             </div>
@@ -117,7 +118,7 @@ export const MobileFiltersModal: React.FC<MobileFiltersModalProps> = ({
                   maxPrice: Number(e.target.value),
                 })
               }
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#5B21B6]"
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[var(--cor-primaria)]"
             />
           </div>
 
@@ -134,15 +135,26 @@ export const MobileFiltersModal: React.FC<MobileFiltersModalProps> = ({
                     key={name}
                     type="button"
                     onClick={() => toggleBrand(name)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium flex items-center gap-1.5 transition-colors ${
-                      isSelected
-                        ? 'bg-violet-50 border-violet-600 text-violet-800 font-semibold'
+                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium flex items-center gap-1.5 transition-colors ${isSelected
+                        ? 'bg-white font-semibold'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                    }`}
+                      }`}
+                    style={
+                      isSelected
+                        ? {
+                          backgroundColor: 'color-mix(in srgb, var(--cor-primaria) 8%, white)',
+                          borderColor: 'var(--cor-primaria)',
+                          color: 'var(--cor-primaria)',
+                        }
+                        : undefined
+                    }
                   >
                     {name}
                     <span className="text-[10px] opacity-70">({count})</span>
-                    {isSelected && <Check className="w-3 h-3 text-violet-600" />}
+                    {isSelected && <Check
+                      className="w-3 h-3"
+                      style={{ color: 'var(--cor-primaria)' }}
+                    />}
                   </button>
                 );
               })}
