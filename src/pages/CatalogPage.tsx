@@ -91,7 +91,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-16">
       {/* Visual Automotive Banner between Header and Stock */}
-      <StockBanner />
+      <div className="-mt-20">
+        <StockBanner />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Breadcrumb */}

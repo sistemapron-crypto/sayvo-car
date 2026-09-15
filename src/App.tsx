@@ -62,7 +62,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-white font-sans antialiased text-slate-900 selection:bg-violet-100 selection:text-violet-900">
       {/* Top Header */}
       {/* Top Header */}
-      <div className="sticky top-0 z-50 bg-white">
+      <div className="sticky top-0 z-50 bg-transparent">
         <Header
           currentRoute={currentRoute}
           onNavigate={(route) => navigateTo(route)}

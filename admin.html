@@ -1884,6 +1884,39 @@
               <p style="font-size:.75rem;color:var(--muted);margin-top:8px">
                 Esta imagem será exibida como banner de destaque no meio do catálogo.
               </p>
+              <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border)">
+                <label>Conteúdo do banner</label>
+
+                <div class="form-group">
+                  <label style="font-size:.75rem">
+                    Título
+                  </label>
+                  <input type="text" id="config-banner-titulo" placeholder="Seu próximo carro está aqui.">
+                </div>
+
+                <div class="form-group">
+                  <label style="font-size:.75rem">
+                    Subtítulo
+                  </label>
+                  <textarea id="config-banner-subtitulo" rows="2"
+                    placeholder="Encontre veículos selecionados para você." style="resize:vertical"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label style="font-size:.75rem">
+                    Posição do conteúdo
+                  </label>
+
+                  <select id="config-banner-posicao">
+                    <option value="esquerda">Esquerda</option>
+                    <option value="direita">Direita</option>
+                  </select>
+
+                  <small style="color:var(--muted)">
+                    Escolha o lado onde o texto ficará sobre a imagem.
+                  </small>
+                </div>
+              </div>
             </div>
             <div class="form-group full">
               <label>Cores do site</label>
@@ -3539,7 +3572,12 @@
       retiradaHoraInicio: "08:00",
       retiradaHoraFim: "18:00",
       retiradaIntervalo: 60,
+
       bannerUrl: "",
+      bannerTitulo: "Seu próximo carro está aqui.",
+      bannerSubtitulo: "Encontre veículos selecionados para você.",
+      bannerPosicao: "esquerda",
+
       corPrimaria: "#aeee02",
       corSecundaria: "#000000",
       corDestaque: "#FFFFFF"
@@ -3571,6 +3609,15 @@
         }
 
         _bannerUrlAtual = cfg.bannerUrl || "";
+
+        document.getElementById("config-banner-titulo").value =
+          cfg.bannerTitulo || "";
+
+        document.getElementById("config-banner-subtitulo").value =
+          cfg.bannerSubtitulo || "";
+
+        document.getElementById("config-banner-posicao").value =
+          cfg.bannerPosicao || "esquerda";
 
         const previewAtual = document.getElementById("config-banner-preview-atual");
 
@@ -3642,6 +3689,12 @@
       const horaInicio = document.getElementById("config-hora-inicio").value;
       const horaFim = document.getElementById("config-hora-fim").value;
       const intervalo = parseInt(document.getElementById("config-intervalo").value, 10) || 60;
+      const bannerTitulo =
+        document.getElementById("config-banner-titulo").value.trim();
+      const bannerSubtitulo =
+        document.getElementById("config-banner-subtitulo").value.trim();
+      const bannerPosicao =
+        document.getElementById("config-banner-posicao").value;
 
       const retiradaDias = [];
       for (let i = 0; i <= 6; i++) {
@@ -3737,6 +3790,9 @@
           retiradaHoraFim: horaFim,
           retiradaIntervalo: intervalo,
           bannerUrl,
+          bannerTitulo,
+          bannerSubtitulo,
+          bannerPosicao,
           logoUrl,
           logoTamanho,
           corPrimaria,
