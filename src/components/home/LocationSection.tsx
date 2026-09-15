@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin, Navigation, Clock, Phone, ShieldCheck, ExternalLink } from 'lucide-react';
 import { STORE_SETTINGS } from '../../data/vehicles';
+import { getStoreConfig } from '../../services/storeService';
 
 export interface LocationSectionProps {
   name?: string;
@@ -25,20 +26,53 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
   googleMapsUrl,
   className = '',
 }) => {
+  const [nomeLoja, setNomeLoja] = useState(name);
+  const [whatsapp, setWhatsapp] = useState(phoneDisplay);
+  const [horario, setHorario] = useState(hours);
+  const [enderecoLoja, setEnderecoLoja] = useState(address);
+  const [coordenadasLoja, setCoordenadasLoja] = useState(coordinates);
+
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        setNomeLoja(config.nomeLoja || name);
+        setWhatsapp(config.whatsapp || phoneDisplay);
+        setHorario(
+          config.retiradaHoraInicio && config.retiradaHoraFim
+            ? `${config.retiradaHoraInicio} às ${config.retiradaHoraFim}`
+            : hours
+        );
+        setEnderecoLoja(config.endereco || address);
+        if (
+          typeof config.latitude === 'number' &&
+          typeof config.longitude === 'number'
+        ) {
+          setCoordenadasLoja({
+            lat: config.latitude,
+            lng: config.longitude,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar configurações da loja:', error);
+      });
+  }, [name, phoneDisplay, hours]);
+
   // Query param dynamically prioritized: coordinates (lat,lng) or text address
-  const queryParam = coordinates
-    ? `${coordinates.lat},${coordinates.lng}`
-    : encodeURIComponent(`${name}, ${address}`);
+  // Query param dynamically prioritized: coordinates (lat,lng) or text address
+  const queryParam = coordenadasLoja
+  ? `${coordenadasLoja.lat},${coordenadasLoja.lng}`
+  : encodeURIComponent(`${nomeLoja}, ${enderecoLoja}`);
 
   // Interactive Google Map iframe URL (no API key required, embed mode)
   const mapEmbedUrl = `https://maps.google.com/maps?q=${queryParam}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
   // "Como chegar" directions route URL
   const directionsUrl =
-    googleMapsUrl ||
-    (coordinates
-      ? `https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${name}, ${address}`)}`);
+  googleMapsUrl ||
+  (coordenadasLoja
+    ? `https://www.google.com/maps/dir/?api=1&destination=${coordenadasLoja.lat},${coordenadasLoja.lng}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${nomeLoja}, ${enderecoLoja}`)}`);
 
   return (
     <section
@@ -71,7 +105,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                   <MapPin className="w-6 h-6 text-violet-700" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">{name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">{nomeLoja}</h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Showroom & Atendimento ao Cliente
                   </p>
@@ -88,7 +122,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                       Endereço
                     </span>
                     <p className="text-sm font-semibold text-slate-800 mt-0.5 leading-relaxed">
-                      {address}
+                      {enderecoLoja}
                     </p>
                   </div>
                 </div>
@@ -101,7 +135,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                       Horário de Funcionamento
                     </span>
                     <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                      {hours}
+                      {horario}
                     </p>
                   </div>
                 </div>
@@ -114,7 +148,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                       Telefone & WhatsApp
                     </span>
                     <p className="text-xs font-semibold text-slate-800 mt-0.5">
-                      {phoneDisplay}
+                      {whatsapp}
                     </p>
                   </div>
                 </div>
@@ -167,8 +201,8 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
-                  <p className="text-[11px] text-slate-500 truncate">{address}</p>
+                  <p className="text-xs font-bold text-slate-900 truncate">{nomeLoja}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{enderecoLoja}</p>
                 </div>
               </div>
 

@@ -5,6 +5,11 @@ export interface StoreConfig {
   nomeLoja?: string;
   whatsapp?: string;
   bannerUrl?: string;
+  logoUrl?: string;
+  logoTamanho?: number;
+  endereco?: string;
+  latitude?: number;
+  longitude?: number;
   corPrimaria?: string;
   corSecundaria?: string;
   corDestaque?: string;

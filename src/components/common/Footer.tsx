@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RonimotorsLogo } from './RonimotorsLogo';
+import { getStoreConfig } from '../../services/storeService';
 import { STORE_SETTINGS } from '../../data/vehicles';
 import { MapPin, Phone, Clock, Mail, ShieldCheck } from 'lucide-react';
 
@@ -8,6 +9,24 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+  const [nomeLoja, setNomeLoja] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [horaInicio, setHoraInicio] = useState('');
+  const [horaFim, setHoraFim] = useState('');
+
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        setNomeLoja(config.nomeLoja || 'Nossa loja');
+        setWhatsapp(config.whatsapp || '');
+        setHoraInicio(config.retiradaHoraInicio || '');
+        setHoraFim(config.retiradaHoraFim || '');
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar configurações da loja:', error);
+      });
+  }, []);
+
   return (
     <footer className="bg-slate-900 text-slate-300 pt-16 pb-24 md:pb-16 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,7 +95,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-violet-400 shrink-0" />
-                <span>{STORE_SETTINGS.phoneDisplay}</span>
+                <span>{whatsapp}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-violet-400 shrink-0" />
@@ -93,7 +112,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <div className="space-y-3 text-xs text-slate-400">
               <div className="flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                <span>{STORE_SETTINGS.hours}</span>
+                <span>
+                  {horaInicio && horaFim
+                    ? `Atendimento: ${horaInicio} às ${horaFim}`
+                    : 'Consulte nosso horário de atendimento'}
+                </span>
               </div>
               <p className="text-[11px] text-slate-500 pt-2">
                 Agende uma visita ou faça um test-drive diretamente pelo nosso WhatsApp.
@@ -104,7 +127,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
         {/* Bottom copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Ronimotors Automóveis. Todos os direitos reservados.</p>
+          <p>
+            © {new Date().getFullYear()} {nomeLoja}. Todos os direitos reservados.
+          </p>
           <p className="text-[11px] text-slate-600">
             Imagens meramente ilustrativas. Reservamo-nos o direito de corrigir eventuais erros de digitação.
           </p>

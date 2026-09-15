@@ -7,11 +7,10 @@ import { LoginModal } from './components/auth/LoginModal';
 import { CatalogPage } from './pages/CatalogPage';
 import { DetailPage } from './pages/DetailPage';
 import { Vehicle, VehicleFilters } from './types/vehicle';
-import { MOCK_VEHICLES } from './data/vehicles';
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>('/');
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => MOCK_VEHICLES[0]);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [initialCatalogFilters, setInitialCatalogFilters] = useState<Partial<VehicleFilters>>({});
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -62,11 +61,19 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-white font-sans antialiased text-slate-900 selection:bg-violet-100 selection:text-violet-900">
       {/* Top Header */}
-      <Header
-        currentRoute={currentRoute}
-        onNavigate={(route) => navigateTo(route)}
-        onOpenLogin={() => setIsLoginOpen(true)}
-      />
+      {/* Top Header */}
+      <div className="sticky top-0 z-50 bg-white">
+        <Header
+          currentRoute={currentRoute}
+          onNavigate={(route) => navigateTo(route)}
+          onOpenLogin={() => setIsLoginOpen(true)}
+        />
+
+        <div
+          className="w-full h-[4px]"
+          style={{ backgroundColor: '#FF5F1F' }}
+        />
+      </div>
 
       {/* Main Page Content */}
       <div className="flex-1">
@@ -103,12 +110,12 @@ export default function App() {
         vehicleContext={
           selectedVehicle && currentRoute.startsWith('/veiculo/')
             ? {
-                marca: selectedVehicle.marca,
-                modelo: selectedVehicle.modelo,
-                versão: selectedVehicle.versão,
-                ano: selectedVehicle.ano,
-                preço: selectedVehicle.preço,
-              }
+              marca: selectedVehicle.marca,
+              modelo: selectedVehicle.modelo,
+              versão: selectedVehicle.versão,
+              ano: selectedVehicle.ano,
+              preço: selectedVehicle.preço,
+            }
             : undefined
         }
       />

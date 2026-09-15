@@ -668,127 +668,127 @@
 
     /* ── UPLOAD DE IMAGENS ── */
 
-.img-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
+    .img-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
 
-.upload-btn-area {
-  background: var(--surface);
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  padding: 18px;
-  text-align: center;
-  cursor: pointer;
-  transition: .2s;
-  color: var(--muted);
-  font-size: .88rem;
-}
+    .upload-btn-area {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      color: var(--muted);
+      font-size: .88rem;
+    }
 
-.upload-btn-area:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
+    .upload-btn-area:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
 
-.upload-preview {
-  margin-top: 10px;
-  display: none;
-}
+    .upload-preview {
+      margin-top: 10px;
+      display: none;
+    }
 
-.upload-preview img {
-  width: 100%;
-  max-height: 160px;
-  object-fit: contain;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
+    .upload-preview img {
+      width: 100%;
+      max-height: 160px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
 
-.upload-preview p {
-  font-size: .75rem;
-  color: var(--muted);
-  margin-top: 6px;
-  text-align: center;
-}
+    .upload-preview p {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: 6px;
+      text-align: center;
+    }
 
-/* ── GALERIA DE IMAGENS ── */
+    /* ── GALERIA DE IMAGENS ── */
 
-.upload-preview-list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
-}
+    .upload-preview-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
 
-.upload-gallery-item {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--surface);
-}
+    .upload-gallery-item {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+    }
 
-.upload-gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+    .upload-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
 
-.upload-gallery-remove {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, .75);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
+    .upload-gallery-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .75);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
 
-.upload-gallery-remove:hover {
-  background: #dc2626;
-}
+    .upload-gallery-remove:hover {
+      background: #dc2626;
+    }
 
-.upload-gallery-remove i {
-  font-size: 12px;
-}
+    .upload-gallery-remove i {
+      font-size: 12px;
+    }
 
-/* ── CAMPO DE URL ── */
+    /* ── CAMPO DE URL ── */
 
-.image-url-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+    .image-url-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-.image-url-row input {
-  flex: 1;
-}
+    .image-url-row input {
+      flex: 1;
+    }
 
-/* ── RESPONSIVO ── */
+    /* ── RESPONSIVO ── */
 
-@media (max-width: 600px) {
-  .upload-preview-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+    @media (max-width: 600px) {
+      .upload-preview-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-  .image-url-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
+      .image-url-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-  .image-url-row .btn {
-    width: 100%;
-  }
-}
+      .image-url-row .btn {
+        width: 100%;
+      }
+    }
 
     .progress-bar {
       display: none;
@@ -1774,9 +1774,65 @@
               <input type="text" id="config-nome-loja" placeholder="Ex: RA Cosméticos">
             </div>
             <div class="form-group full">
+              <label>Logo da loja</label>
+
+              <div id="config-logo-upload-area">
+                <input type="file" id="config-logo-imagem-file" accept="image/*" style="display:none">
+
+                <div class="upload-btn-area" onclick="document.getElementById('config-logo-imagem-file').click()">
+                  <i class="fa-solid fa-image" style="font-size:1.4rem;margin-bottom:6px;display:block"></i>
+
+                  Clique para selecionar o logo
+                </div>
+
+                <div class="upload-preview" id="config-logo-upload-preview">
+                  <img id="config-logo-upload-preview-img" src="" alt="preview do logo">
+                  <p id="config-logo-upload-filename"></p>
+                </div>
+              </div>
+
+              <div style="margin-top:10px">
+                <p style="font-size:.75rem;color:var(--muted);margin-bottom:6px">
+                  Logo atual:
+                </p>
+
+                <div
+                  style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+                  <img id="config-logo-preview-atual" src="" alt="logo atual"
+                    style="max-width:220px;max-height:100px;object-fit:contain;display:none;margin:auto">
+                </div>
+              </div>
+
+              <div style="margin-top:12px">
+                <label for="config-logo-tamanho">
+                  Tamanho do logo
+                </label>
+
+                <input type="range" id="config-logo-tamanho" min="60" max="300" step="5" value="160" style="width:100%">
+
+                <small style="color:var(--muted)">
+                  Ajuste o tamanho visual do logo no site.
+                </small>
+              </div>
+            </div>
+            <div class="form-group full">
               <label>WhatsApp para receber pedidos <small style="color:var(--muted)">(DDI + DDD + número, só números,
                   ex: 5581999999999)</small></label>
               <input type="text" id="config-whatsapp" placeholder="5581999999999">
+            </div>
+            <div class="form-group full">
+              <label>Endereço da loja</label>
+              <input type="text" id="config-endereco" placeholder="Ex: Av. Principal, 123 - Centro">
+            </div>
+
+            <div class="form-group">
+              <label>Latitude</label>
+              <input type="number" id="config-latitude" step="any" placeholder="Ex: -7.123456">
+            </div>
+
+            <div class="form-group">
+              <label>Longitude</label>
+              <input type="number" id="config-longitude" step="any" placeholder="Ex: -40.123456">
             </div>
             <div class="form-group full">
               <label>Dias disponíveis para retirada</label>
@@ -1799,39 +1855,36 @@
                 id="config-intervalo" min="15" step="15" placeholder="60"></div>
 
             <div class="form-group full">
-              <label>Banner do topo do site</label>
-              <div class="img-tabs">
-                <button type="button" id="config-tab-banner-url" class="btn btn-primary btn-sm"
-                  onclick="alternarAbaImagemBanner('url')">
-                  <i class="fa-solid fa-link"></i> Colar URL
-                </button>
-                <button type="button" id="config-tab-banner-upload" class="btn btn-ghost btn-sm"
-                  onclick="alternarAbaImagemBanner('upload')">
-                  <i class="fa-solid fa-camera"></i> Upload / Câmera
-                </button>
-              </div>
-              <div id="config-banner-url-area">
-                <input type="text" id="config-banner-imagem" placeholder="https://... ou ./assets/banner.jpg">
-              </div>
-              <div id="config-banner-upload-area" style="display:none">
+              <label>Banner de destaque do catálogo</label>
+
+              <div id="config-banner-upload-area">
                 <input type="file" id="config-banner-imagem-file" accept="image/*" style="display:none">
+
                 <div class="upload-btn-area" onclick="document.getElementById('config-banner-imagem-file').click()">
                   <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.4rem;margin-bottom:6px;display:block"></i>
-                  Clique para selecionar uma imagem<br>
-                  <span style="font-size:.78rem">ou tirar foto pela câmera do celular</span>
+
+                  Clique para selecionar uma imagem
                 </div>
+
                 <div class="upload-preview" id="config-banner-upload-preview">
                   <img id="config-banner-upload-preview-img" src="" alt="preview">
                   <p id="config-banner-upload-filename"></p>
                 </div>
               </div>
+
               <div style="margin-top:10px">
-                <p style="font-size:.75rem;color:var(--muted);margin-bottom:6px">Banner atual:</p>
+                <p style="font-size:.75rem;color:var(--muted);margin-bottom:6px">
+                  Banner atual:
+                </p>
+
                 <img id="config-banner-preview-atual" src="" alt="banner atual"
                   style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none">
               </div>
-            </div>
 
+              <p style="font-size:.75rem;color:var(--muted);margin-top:8px">
+                Esta imagem será exibida como banner de destaque no meio do catálogo.
+              </p>
+            </div>
             <div class="form-group full">
               <label>Cores do site</label>
               <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:4px">
@@ -2557,24 +2610,48 @@
     }
 
     // ── UPLOAD DO BANNER (CONFIGURAÇÕES) ─────────────────────────────────────
+    let _logoUrlAtual = "";
     let _bannerArquivoSelecionado = null;
-
-    function alternarAbaImagemBanner(aba) {
-      document.getElementById("config-banner-url-area").style.display = aba === "url" ? "block" : "none";
-      document.getElementById("config-banner-upload-area").style.display = aba === "upload" ? "block" : "none";
-      document.getElementById("config-tab-banner-url").className = "btn btn-sm " + (aba === "url" ? "btn-primary" : "btn-ghost");
-      document.getElementById("config-tab-banner-upload").className = "btn btn-sm " + (aba === "upload" ? "btn-primary" : "btn-ghost");
-      if (aba === "url") _bannerArquivoSelecionado = null;
-    }
 
     document.getElementById("config-banner-imagem-file").addEventListener("change", (e) => {
       const file = e.target.files[0];
+
       if (!file) return;
+
       _bannerArquivoSelecionado = file;
+
       document.getElementById("config-banner-upload-filename").textContent = file.name;
+
       document.getElementById("config-banner-upload-preview").style.display = "block";
+
       const reader = new FileReader();
-      reader.onload = (ev) => { document.getElementById("config-banner-upload-preview-img").src = ev.target.result; };
+
+      reader.onload = (ev) => {
+        document.getElementById("config-banner-upload-preview-img").src = ev.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    let _logoArquivoSelecionado = null;
+
+    document.getElementById("config-logo-imagem-file").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+
+      if (!file) return;
+
+      _logoArquivoSelecionado = file;
+
+      document.getElementById("config-logo-upload-filename").textContent = file.name;
+
+      document.getElementById("config-logo-upload-preview").style.display = "block";
+
+      const reader = new FileReader();
+
+      reader.onload = (ev) => {
+        document.getElementById("config-logo-upload-preview-img").src = ev.target.result;
+      };
+
       reader.readAsDataURL(file);
     });
 
@@ -3467,59 +3544,154 @@
       corSecundaria: "#000000",
       corDestaque: "#FFFFFF"
     };
-
     async function carregarConfiguracoes() {
       try {
         const doc = await db.collection("configuracoes").doc("geral").get();
         const cfg = doc.exists ? { ...CONFIG_PADRAO, ...doc.data() } : CONFIG_PADRAO;
+
         document.getElementById("config-nome-loja").value = cfg.nomeLoja;
         document.getElementById("config-whatsapp").value = cfg.whatsapp;
+        document.getElementById("config-endereco").value = cfg.endereco || "";
+        document.getElementById("config-latitude").value =
+          cfg.latitude !== null && cfg.latitude !== undefined
+            ? cfg.latitude
+            : "";
+
+        document.getElementById("config-longitude").value =
+          cfg.longitude !== null && cfg.longitude !== undefined
+            ? cfg.longitude
+            : "";
         document.getElementById("config-hora-inicio").value = cfg.retiradaHoraInicio;
         document.getElementById("config-hora-fim").value = cfg.retiradaHoraFim;
         document.getElementById("config-intervalo").value = cfg.retiradaIntervalo;
+
         for (let i = 0; i <= 6; i++) {
-          document.getElementById("config-dia-" + i).checked = cfg.retiradaDias.includes(i);
+          document.getElementById("config-dia-" + i).checked =
+            cfg.retiradaDias.includes(i);
         }
-        document.getElementById("config-banner-imagem").value = cfg.bannerUrl || "";
+
+        _bannerUrlAtual = cfg.bannerUrl || "";
+
         const previewAtual = document.getElementById("config-banner-preview-atual");
-        if (cfg.bannerUrl) { previewAtual.src = cfg.bannerUrl; previewAtual.style.display = "block"; }
-        else { previewAtual.style.display = "none"; }
+
+        if (cfg.bannerUrl) {
+          previewAtual.src = cfg.bannerUrl;
+          previewAtual.style.display = "block";
+        } else {
+          previewAtual.src = "";
+          previewAtual.style.display = "none";
+        }
+
         document.getElementById("config-cor-primaria").value = cfg.corPrimaria;
         document.getElementById("config-cor-secundaria").value = cfg.corSecundaria;
         document.getElementById("config-cor-destaque").value = cfg.corDestaque;
-        resetarUploadBanner();
-      } catch (e) { toast("Erro ao carregar configurações: " + e.message, "err"); }
-    }
 
+        resetarUploadBanner();
+
+        _logoUrlAtual = cfg.logoUrl || "";
+
+        const logoPreviewAtual = document.getElementById("config-logo-preview-atual");
+
+        if (cfg.logoUrl) {
+          logoPreviewAtual.src = cfg.logoUrl;
+          logoPreviewAtual.style.display = "block";
+        } else {
+          logoPreviewAtual.src = "";
+          logoPreviewAtual.style.display = "none";
+        }
+
+        document.getElementById("config-logo-tamanho").value =
+          cfg.logoTamanho || 160;
+
+      } catch (e) {
+        toast("Erro ao carregar configurações: " + e.message, "err");
+      }
+    }
     function resetarUploadBanner() {
       _bannerArquivoSelecionado = null;
-      alternarAbaImagemBanner("url");
-      document.getElementById("config-banner-upload-preview").style.display = "none";
-      document.getElementById("config-banner-imagem-file").value = "";
-      document.getElementById("config-banner-upload-preview-img").src = "";
-      document.getElementById("config-banner-upload-filename").textContent = "";
-    }
+      _logoArquivoSelecionado = null;
 
+      const preview = document.getElementById("config-banner-upload-preview");
+      const fileInput = document.getElementById("config-banner-imagem-file");
+      const previewImg = document.getElementById("config-banner-upload-preview-img");
+      const filename = document.getElementById("config-banner-upload-filename");
+
+      if (preview) preview.style.display = "none";
+      if (fileInput) fileInput.value = "";
+      if (previewImg) previewImg.src = "";
+      if (filename) filename.textContent = "";
+
+      const logoPreview = document.getElementById("config-logo-upload-preview");
+      const logoFileInput = document.getElementById("config-logo-imagem-file");
+      const logoPreviewImg = document.getElementById("config-logo-upload-preview-img");
+      const logoFilename = document.getElementById("config-logo-upload-filename");
+
+      if (logoPreview) logoPreview.style.display = "none";
+      if (logoFileInput) logoFileInput.value = "";
+      if (logoPreviewImg) logoPreviewImg.src = "";
+      if (logoFilename) logoFilename.textContent = "";
+    }
     async function salvarConfiguracoes() {
       const nomeLoja = document.getElementById("config-nome-loja").value.trim();
       const whatsapp = document.getElementById("config-whatsapp").value.trim().replace(/\D/g, "");
+      const endereco = document.getElementById("config-endereco").value.trim();
+      const latitudeTexto = document.getElementById("config-latitude").value.trim();
+      const longitudeTexto = document.getElementById("config-longitude").value.trim();
+      const latitude = latitudeTexto !== "" ? parseFloat(latitudeTexto) : null;
+      const longitude = longitudeTexto !== "" ? parseFloat(longitudeTexto) : null;
       const horaInicio = document.getElementById("config-hora-inicio").value;
       const horaFim = document.getElementById("config-hora-fim").value;
       const intervalo = parseInt(document.getElementById("config-intervalo").value, 10) || 60;
+
       const retiradaDias = [];
       for (let i = 0; i <= 6; i++) {
-        if (document.getElementById("config-dia-" + i).checked) retiradaDias.push(i);
+        if (document.getElementById("config-dia-" + i).checked) {
+          retiradaDias.push(i);
+        }
       }
+
+      if (latitude !== null && Number.isNaN(latitude)) {
+        toast("Latitude inválida.", "err");
+        return;
+      }
+
+      if (longitude !== null && Number.isNaN(longitude)) {
+        toast("Longitude inválida.", "err");
+        return;
+      }
+
+      if (latitude !== null && (latitude < -90 || latitude > 90)) {
+        toast("A latitude deve estar entre -90 e 90.", "err");
+        return;
+      }
+
+      if (longitude !== null && (longitude < -180 || longitude > 180)) {
+        toast("A longitude deve estar entre -180 e 180.", "err");
+        return;
+      }
+
       const corPrimaria = document.getElementById("config-cor-primaria").value;
       const corSecundaria = document.getElementById("config-cor-secundaria").value;
       const corDestaque = document.getElementById("config-cor-destaque").value;
 
-      if (!nomeLoja || !whatsapp) { toast("Preencha nome da loja e WhatsApp.", "err"); return; }
-      if (!horaInicio || !horaFim || horaInicio >= horaFim) { toast("Verifique o horário de início e fim da retirada.", "err"); return; }
-      if (!retiradaDias.length) { toast("Selecione ao menos um dia para retirada.", "err"); return; }
+      if (!nomeLoja || !whatsapp) {
+        toast("Preencha nome da loja e WhatsApp.", "err");
+        return;
+      }
 
-      // Resolve banner: upload tem prioridade sobre URL
-      let bannerUrl = document.getElementById("config-banner-imagem").value.trim();
+      if (!horaInicio || !horaFim || horaInicio >= horaFim) {
+        toast("Verifique o horário de início e fim da retirada.", "err");
+        return;
+      }
+
+      if (!retiradaDias.length) {
+        toast("Selecione ao menos um dia para retirada.", "err");
+        return;
+      }
+
+      // Banner
+      let bannerUrl = _bannerUrlAtual || "";
+
       if (_bannerArquivoSelecionado) {
         try {
           bannerUrl = await fazerUploadImagem(_bannerArquivoSelecionado, 1600);
@@ -3529,19 +3701,59 @@
         }
       }
 
+      // Logo
+      let logoUrl = _logoUrlAtual || "";
+
+      if (_logoArquivoSelecionado) {
+        try {
+          logoUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+
+            // Mantém a transparência original do PNG/WebP
+            reader.readAsDataURL(_logoArquivoSelecionado);
+          });
+        } catch (e) {
+          toast("Erro ao processar o logo: " + e.message, "err");
+          return;
+        }
+      }
+
+      // Tamanho do logo
+      const logoTamanho =
+        parseInt(document.getElementById("config-logo-tamanho").value, 10) || 160;
+
       try {
         await db.collection("configuracoes").doc("geral").set({
-          nomeLoja, whatsapp, retiradaDias,
+          nomeLoja,
+          whatsapp,
+          endereco,
+          latitude,
+          longitude,
+          retiradaDias,
           retiradaHoraInicio: horaInicio,
           retiradaHoraFim: horaFim,
           retiradaIntervalo: intervalo,
-          bannerUrl, corPrimaria, corSecundaria, corDestaque
+          bannerUrl,
+          logoUrl,
+          logoTamanho,
+          corPrimaria,
+          corSecundaria,
+          corDestaque
         });
-        toast("Configurações salvas!", "ok");
-        await carregarConfiguracoes();
-      } catch (e) { toast("Erro: " + e.message, "err"); }
-    }
 
+        _bannerUrlAtual = bannerUrl;
+        _logoUrlAtual = logoUrl;
+
+        toast("Configurações salvas!", "ok");
+
+        await carregarConfiguracoes();
+      } catch (e) {
+        toast("Erro: " + e.message, "err");
+      }
+    }
     // ── MODAL HELPERS ─────────────────────────────────────────────────────────
     function abrirModal(id) { document.getElementById(id).classList.add("show"); }
     function fecharModal(id) { document.getElementById(id).classList.remove("show"); }

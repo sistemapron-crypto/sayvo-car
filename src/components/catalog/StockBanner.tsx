@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getStoreConfig } from '../../services/storeService';
 
 export interface StockBannerProps {
   className?: string;
 }
 
 export const StockBanner: React.FC<StockBannerProps> = ({ className = '' }) => {
+  const [bannerUrl, setBannerUrl] = useState('');
+
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        if (config.bannerUrl) {
+          setBannerUrl(config.bannerUrl);
+        }
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar o banner da loja:', error);
+      });
+  }, []);
   return (
     <div
       aria-label="Destaque Ronimotors"
-      className={`relative w-full h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px] overflow-hidden bg-slate-950 border-b border-slate-200/80 ${className}`}
-    >
+     className={`relative w-full h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px] overflow-hidden bg-slate-950 border-b border-slate-200/80 ${className}`}
+    > 
       {/* Background Automotive Image */}
       <img
-        src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=2000&q=85"
+        src={bannerUrl || "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=2000&q=85"}
         alt="Veículo esportivo seminovo de luxo"
         className="absolute inset-0 w-full h-full object-cover object-[65%_center] sm:object-[center_42%] pointer-events-none select-none"
         loading="eager"

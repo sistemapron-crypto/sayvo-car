@@ -5,7 +5,6 @@ import { VehicleGallery } from '../components/details/VehicleGallery';
 import { PriceCard } from '../components/details/PriceCard';
 import { VehicleSpecifications } from '../components/details/VehicleSpecifications';
 import { InterestModal } from '../components/details/InterestModal';
-import { STORE_SETTINGS } from '../data/vehicles';
 import { getStoreConfig } from '../services/storeService';
 import { createWhatsAppUrl, formatCurrency } from '../utils/formatters';
 
@@ -24,26 +23,26 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 }) => {
   const [isInterestModalOpen, setIsInterestModalOpen] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
-  const [storeWhatsapp, setStoreWhatsapp] = useState(STORE_SETTINGS.whatsapp);
+  const [storeWhatsapp, setStoreWhatsapp] = useState('');
+  const [storeName, setStoreName] = useState('');
 
   React.useEffect(() => {
-    getStoreConfig()
-      .then((config) => {
-        if (config.whatsapp) {
-          setStoreWhatsapp(config.whatsapp);
-        }
-      })
-      .catch((error) => {
-        console.error('Erro ao carregar configuração da loja:', error);
-      });
-  }, []);
+  getStoreConfig()
+    .then((config) => {
+      setStoreWhatsapp(config.whatsapp || '');
+      setStoreName(config.nomeLoja || '');
+    })
+    .catch((error) => {
+      console.error('Erro ao carregar configuração da loja:', error);
+    });
+}, []);
 
   const handleShare = () => {
     if (navigator.share) {
       navigator
         .share({
-          title: `${vehicle.marca} ${vehicle.modelo} - Ronimotors`,
-          text: `Confira este ${vehicle.modelo} ${vehicle.versão} na Ronimotors Automóveis`,
+          title: `${vehicle.marca} ${vehicle.modelo} - ${storeName}`,
+          text: `Confira este ${vehicle.modelo} ${vehicle.versão} na ${storeName}`,
           url: window.location.href,
         })
         .catch(() => { });
@@ -55,7 +54,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   };
 
   const handleDirectWhatsApp = () => {
-    const message = `Olá! Tenho interesse no ${vehicle.marca} ${vehicle.modelo} ${vehicle.versão} (${vehicle.ano}) anunciado por ${formatCurrency(vehicle.preço)} na Ronimotors. Está disponível?`;
+    const message = `Olá! Tenho interesse no ${vehicle.marca} ${vehicle.modelo} ${vehicle.versão} (${vehicle.ano}) anunciado por ${formatCurrency(vehicle.preço)} na ${storeName}. Está disponível?`;
     const url = createWhatsAppUrl(storeWhatsapp, message);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -209,7 +208,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             <div className="p-4 bg-violet-50/60 border border-violet-100 rounded-xl text-xs text-violet-900 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold">Garantia Ronimotors</p>
+               <p className="font-bold">Garantia {storeName}</p>
                 <p className="text-violet-700 mt-0.5">
                   Laudo pericial 100% aprovado, quilometragem original e garantia mecânica.
                   Aceitamos seu veículo seminovo na troca com a melhor avaliação.

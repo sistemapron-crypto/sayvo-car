@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
 import { Vehicle } from '../../types/vehicle';
-import { STORE_SETTINGS } from '../../data/vehicles';
+import { getStoreConfig } from '../../services/storeService';
 import { createWhatsAppUrl, formatCurrency } from '../../utils/formatters';
 
 interface InterestModalProps {
@@ -15,7 +15,20 @@ export const InterestModal: React.FC<InterestModalProps> = ({
   onClose,
   vehicle,
 }) => {
+  const [whatsapp, setWhatsapp] = useState('');
+
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        setWhatsapp(config.whatsapp || '');
+        setStoreName(config.nomeLoja || '');
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar WhatsApp:', error);
+      });
+  }, []);
   const [nome, setNome] = useState('');
+  const [storeName, setStoreName] = useState('');
   const [telefone, setTelefone] = useState('');
   const [comTroca, setComTroca] = useState(false);
   const [mensagem, setMensagem] = useState(
@@ -29,7 +42,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
     e.preventDefault();
     const tradeText = comTroca ? ' (Possuo veículo para troca)' : '';
     const fullMessage = `${mensagem}${tradeText}\nMeu contato: ${nome} - ${telefone}`;
-    const url = createWhatsAppUrl(STORE_SETTINGS.whatsapp, fullMessage);
+    const url = createWhatsAppUrl(whatsapp, fullMessage);
     window.open(url, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
     setTimeout(() => {
@@ -63,7 +76,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
             </div>
             <h4 className="text-lg font-bold text-slate-900">Mensagem Iniciada!</h4>
             <p className="text-xs text-slate-500">
-              Você está sendo redirecionado para o WhatsApp da Ronimotors Automóveis.
+              Você está sendo redirecionado para o WhatsApp da {storeName}.
             </p>
           </div>
         ) : (

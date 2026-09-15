@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
-import { STORE_SETTINGS } from '../../data/vehicles';
+import { getStoreConfig } from '../../services/storeService';
 import { createWhatsAppUrl } from '../../utils/formatters';
 
 interface WhatsAppFloatingProps {
@@ -16,14 +16,27 @@ interface WhatsAppFloatingProps {
 export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleContext }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [quickMessage, setQuickMessage] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [nomeLoja, setNomeLoja] = useState('');
+
+  useEffect(() => {
+    getStoreConfig()
+      .then((config) => {
+        setWhatsapp(config.whatsapp || '');
+        setNomeLoja(config.nomeLoja || 'Nossa loja');
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar configurações da loja:', error);
+      });
+  }, []);
 
   const defaultMessage = vehicleContext
-    ? `Olá! Tenho interesse no ${vehicleContext.marca} ${vehicleContext.modelo} ${vehicleContext.versão} (${vehicleContext.ano}) anunciado na Ronimotors.`
-    : 'Olá! Gostaria de mais informações sobre os veículos disponíveis no estoque da Ronimotors.';
+    ? `Olá! Tenho interesse no ${vehicleContext.marca} ${vehicleContext.modelo} ${vehicleContext.versão} (${vehicleContext.ano}) anunciado na ${nomeLoja}.`
+    : `Olá! Gostaria de mais informações sobre os veículos disponíveis no estoque da ${nomeLoja}.`;
 
   const handleOpenWhatsApp = (customMsg?: string) => {
     const msgToSend = customMsg || quickMessage || defaultMessage;
-    const url = createWhatsAppUrl(STORE_SETTINGS.whatsapp, msgToSend);
+    const url = createWhatsAppUrl(whatsapp, msgToSend);
     window.open(url, '_blank', 'noopener,noreferrer');
     setIsOpen(false);
   };
@@ -37,7 +50,7 @@ export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleConte
             <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <div>
-                <h4 className="text-sm font-semibold leading-tight">Ronimotors Atendimento</h4>
+                <h4 className="text-sm font-semibold leading-tight">{nomeLoja} Atendimento</h4>
                 <p className="text-[11px] text-violet-200">Online agora no WhatsApp</p>
               </div>
             </div>
