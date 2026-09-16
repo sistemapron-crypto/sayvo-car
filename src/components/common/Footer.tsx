@@ -28,12 +28,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   }, []);
 
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-24 md:pb-16 border-t border-slate-800">
+    <footer className="bg-[#000000] text-slate-300 pt-16 pb-24 md:pb-16 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
           {/* Col 1: Brand info */}
           <div className="space-y-4">
-            <div className="bg-white inline-block px-3 py-1.5 rounded-lg">
+            <div className="inline-block px-0 py-1.5">
               <RonimotorsLogo size="sm" />
             </div>
             <p className="text-xs leading-relaxed text-slate-400">
@@ -90,15 +90,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </h4>
             <ul className="space-y-3 text-xs text-slate-400">
               <li className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-[var(--cor-primaria)] shrink-0 mt-0.5" />
                 <span>{STORE_SETTINGS.address}</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-violet-400 shrink-0" />
+                <Phone className="w-4 h-4 text-[var(--cor-primaria)] shrink-0" />
                 <span>{whatsapp}</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-violet-400 shrink-0" />
+                <Mail className="w-4 h-4 text-[var(--cor-primaria)] shrink-0" />
                 <span>{STORE_SETTINGS.email}</span>
               </li>
             </ul>
@@ -111,7 +111,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </h4>
             <div className="space-y-3 text-xs text-slate-400">
               <div className="flex items-start gap-2.5">
-                <Clock className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <Clock className="w-4 h-4 text-[var(--cor-primaria)] shrink-0 mt-0.5" />
                 <span>
                   {horaInicio && horaFim
                     ? `Atendimento: ${horaInicio} às ${horaFim}`

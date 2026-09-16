@@ -46,12 +46,12 @@ export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleConte
       {/* Quick Chat Popup (if expanded) */}
       {isOpen && (
         <div className="mb-3 w-80 bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="bg-[#5B21B6] px-4 py-3 text-white flex items-center justify-between">
+          <div className="bg-[var(--cor-primaria)] px-4 py-3 text-white flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <div>
                 <h4 className="text-sm font-semibold leading-tight">{nomeLoja} Atendimento</h4>
-                <p className="text-[11px] text-violet-200">Online agora no WhatsApp</p>
+                <p className="text-[11px] text-white/80">Online agora no WhatsApp</p>
               </div>
             </div>
             <button
@@ -72,7 +72,7 @@ export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleConte
               value={quickMessage}
               onChange={(e) => setQuickMessage(e.target.value)}
               placeholder="Digite sua mensagem personalizada..."
-              className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-violet-600 resize-none h-18 text-slate-800"
+              className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-[var(--cor-primaria)] resize-none h-18 text-slate-800"
             />
 
             <button
@@ -93,7 +93,7 @@ export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleConte
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="hidden sm:flex items-center gap-1.5 bg-[#5013e8] text-white text-xs font-semibold px-3.5 py-2 rounded-full shadow-md hover:bg-violet-700 transition-all cursor-pointer active:scale-95"
+          className="hidden sm:flex items-center gap-1.5 bg-[var(--cor-primaria)] text-white text-xs font-semibold px-3.5 py-2 rounded-full shadow-md hover:brightness-95 transition-all cursor-pointer active:scale-95"
         >
           <span>Posso ajudar?</span>
           <span className="text-sm">💬</span>
@@ -103,7 +103,7 @@ export const WhatsAppFloating: React.FC<WhatsAppFloatingProps> = ({ vehicleConte
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-13 h-13 md:w-14 md:h-14 rounded-full bg-[#5013e8] hover:bg-violet-700 active:scale-95 text-white flex items-center justify-center shadow-lg transition-all cursor-pointer group"
+          className="w-13 h-13 md:w-14 md:h-14 rounded-full bg-[var(--cor-primaria)] hover:brightness-95 active:scale-95 text-white flex items-center justify-center shadow-lg transition-all cursor-pointer group"
           aria-label="Atendimento no WhatsApp"
         >
           <MessageCircle className="w-6 h-6 md:w-7 md:h-7 group-hover:rotate-6 transition-transform" />

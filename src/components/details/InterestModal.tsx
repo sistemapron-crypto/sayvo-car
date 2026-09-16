@@ -108,7 +108,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
                 placeholder="Ex: Carlos Eduardo"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-violet-600"
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-[var(--cor-primaria)]"
               />
             </div>
 
@@ -122,7 +122,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
                 placeholder="(11) 98765-4321"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-violet-600"
+                className="w-4 h-4 rounded focus:ring-[var(--cor-primaria)] accent-[var(--cor-primaria)]"
               />
             </div>
 
@@ -131,7 +131,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
                 type="checkbox"
                 checked={comTroca}
                 onChange={(e) => setComTroca(e.target.checked)}
-                className="w-4 h-4 rounded text-violet-600 focus:ring-violet-500 accent-[#5B21B6]"
+                className="w-4 h-4 rounded text-[var(--cor-primaria)] focus:ring-[var(--cor-primaria)] accent-[var(--cor-primaria)]"
               />
               <span>Tenho um veículo para dar na troca</span>
             </label>
@@ -144,7 +144,7 @@ export const InterestModal: React.FC<InterestModalProps> = ({
                 rows={2}
                 value={mensagem}
                 onChange={(e) => setMensagem(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-violet-600 resize-none text-slate-700"
+                className="w-full px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-[var(--cor-primaria)] resize-none text-slate-700"
               />
             </div>
 

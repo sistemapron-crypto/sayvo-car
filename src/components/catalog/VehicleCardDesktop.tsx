@@ -15,7 +15,7 @@ export const VehicleCardDesktop: React.FC<VehicleCardDesktopProps> = ({
   return (
     <article
       onClick={() => onSelect(vehicle)}
-      className="group bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer"
+      className="group bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer"
     >
       {/* Top Image Section */}
       <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
@@ -45,7 +45,7 @@ export const VehicleCardDesktop: React.FC<VehicleCardDesktopProps> = ({
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Brand & Model */}
-          <h3 className="text-base md:text-lg font-bold text-slate-900 group-hover:text-violet-700 transition-colors line-clamp-1 capitalize">
+          <h3 className="text-base md:text-lg font-bold text-slate-900 group-hover:text-[var(--cor-primaria)] transition-colors line-clamp-1 capitalize">
             {vehicle.modelo}
           </h3>
 
@@ -56,7 +56,7 @@ export const VehicleCardDesktop: React.FC<VehicleCardDesktopProps> = ({
 
           {/* Price Block matching Reference 1 */}
           <div className="mb-4">
-            <div className="text-2xl font-extrabold text-[#059669] tracking-tight">
+            <div className="text-2xl font-extrabold text-[var(--cor-primaria)] tracking-tight">
               {formatCurrency(vehicle.preço)}
             </div>
             <span className="text-xs text-slate-400 font-normal">À vista</span>
@@ -93,11 +93,11 @@ export const VehicleCardDesktop: React.FC<VehicleCardDesktopProps> = ({
         {/* Ver Detalhes Button matching Reference 1 */}
         <div className="mt-5 pt-1">
           <button
-            type="button"
-            className="w-full py-2.5 bg-[#0F172A] group-hover:bg-[#1E293B] text-white text-sm font-semibold rounded-lg transition-colors text-center cursor-pointer shadow-2xs"
-          >
-            Ver Detalhes
-          </button>
+  type="button"
+  className="w-full py-2.5 bg-[var(--cor-primaria)] hover:brightness-95 active:brightness-90 text-white text-sm font-semibold rounded-lg transition-all text-center cursor-pointer shadow-2xs"
+>
+  Ver Detalhes
+</button>
         </div>
       </div>
     </article>

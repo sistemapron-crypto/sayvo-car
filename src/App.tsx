@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/common/Header';
-import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { Footer } from './components/common/Footer';
 import { WhatsAppFloating } from './components/common/WhatsAppFloating';
 import { LoginModal } from './components/auth/LoginModal';
+import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { CatalogPage } from './pages/CatalogPage';
 import { DetailPage } from './pages/DetailPage';
 import { Vehicle, VehicleFilters } from './types/vehicle';

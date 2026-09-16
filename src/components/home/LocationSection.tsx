@@ -82,7 +82,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="max-w-2xl mb-10">
-          <span className="text-xs font-bold text-violet-700 tracking-wider uppercase">
+          <span className="text-xs font-bold text-[var(--cor-primaria)] tracking-wider uppercase">
             Localização
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
@@ -101,8 +101,8 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
             <div className="space-y-6">
               {/* Store Title & Badge */}
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-violet-100 text-violet-800 flex items-center justify-center shrink-0 shadow-2xs">
-                  <MapPin className="w-6 h-6 text-violet-700" />
+                <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--cor-primaria)_10%,white)] text-[var(--cor-primaria)] flex items-center justify-center shrink-0 shadow-2xs">
+                  <MapPin className="w-6 h-6 text-[var(--cor-primaria)]" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">{nomeLoja}</h3>
@@ -116,7 +116,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
               <div className="space-y-4 pt-2 border-t border-slate-200/80">
                 {/* Address */}
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-violet-600 shrink-0 mt-1" />
+                  <MapPin className="w-4 h-4 text-[var(--cor-primaria)] shrink-0 mt-1" />
                   <div>
                     <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Endereço
@@ -129,7 +129,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
 
                 {/* Hours */}
                 <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-violet-600 shrink-0 mt-1" />
+                  <Clock className="w-4 h-4 text-[var(--cor-primaria)] shrink-0 mt-1" />
                   <div>
                     <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Horário de Funcionamento
@@ -142,7 +142,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
 
                 {/* Phone */}
                 <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 text-violet-600 shrink-0 mt-1" />
+                  <Phone className="w-4 h-4 text-[var(--cor-primaria)] shrink-0 mt-1" />
                   <div>
                     <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Telefone & WhatsApp
@@ -174,7 +174,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-6 bg-[#5B21B6] hover:bg-[#4C1D95] active:bg-[#3B0764] text-white font-bold text-sm rounded-xl transition-colors shadow-md hover:shadow-lg cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-6 bg-[var(--cor-primaria)] hover:brightness-95 active:brightness-90 text-white font-bold text-sm rounded-xl transition-colors shadow-md hover:shadow-lg cursor-pointer"
               >
                 <Navigation className="w-4 h-4" />
                 <span>Como chegar</span>
@@ -197,7 +197,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({
 
               {/* Top-Left Location Overlay Card */}
               <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs px-3.5 py-2.5 rounded-xl border border-slate-200/80 shadow-md flex items-center gap-2.5 pointer-events-none max-w-[280px]">
-                <div className="w-8 h-8 rounded-lg bg-[#5B21B6] text-white flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[var(--cor-primaria)] text-white flex items-center justify-center shrink-0">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">

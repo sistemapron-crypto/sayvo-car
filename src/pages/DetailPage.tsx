@@ -27,15 +27,15 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   const [storeName, setStoreName] = useState('');
 
   React.useEffect(() => {
-  getStoreConfig()
-    .then((config) => {
-      setStoreWhatsapp(config.whatsapp || '');
-      setStoreName(config.nomeLoja || '');
-    })
-    .catch((error) => {
-      console.error('Erro ao carregar configuração da loja:', error);
-    });
-}, []);
+    getStoreConfig()
+      .then((config) => {
+        setStoreWhatsapp(config.whatsapp || '');
+        setStoreName(config.nomeLoja || '');
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar configuração da loja:', error);
+      });
+  }, []);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -67,7 +67,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           <button
             type="button"
             onClick={onBackToStock}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-violet-700 transition-colors cursor-pointer group"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-[var(--cor-primaria)] transition-colors cursor-pointer group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span>Voltar para Estoque</span>
@@ -155,7 +155,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                 </span>
 
                 {vehicle.disponível && (
-                  <span className="bg-[#5B21B6] text-white text-xs px-3 py-0.5 rounded-full font-semibold">
+                  <span
+                    className="text-white text-xs px-3 py-0.5 rounded-full font-semibold"
+                    style={{ backgroundColor: 'var(--cor-primaria)' }}
+                  >
                     Disponível
                   </span>
                 )}
@@ -205,11 +208,24 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             </div>
 
             {/* Trust and Safety Banner */}
-            <div className="p-4 bg-violet-50/60 border border-violet-100 rounded-xl text-xs text-violet-900 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+            <div
+              className="p-4 rounded-xl text-xs flex items-start gap-3"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--cor-primaria) 8%, white)',
+                border: '1px solid color-mix(in srgb, var(--cor-primaria) 20%, white)',
+                color: 'var(--cor-primaria)',
+              }}
+            >
+              <ShieldCheck
+                className="w-5 h-5 shrink-0 mt-0.5"
+                style={{ color: 'var(--cor-primaria)' }}
+              />
               <div>
-               <p className="font-bold">Garantia {storeName}</p>
-                <p className="text-violet-700 mt-0.5">
+                <p className="font-bold">Garantia {storeName}</p>
+                <p
+                  className="mt-0.5"
+                  style={{ color: 'var(--cor-primaria)' }}
+                >
                   Laudo pericial 100% aprovado, quilometragem original e garantia mecânica.
                   Aceitamos seu veículo seminovo na troca com a melhor avaliação.
                 </p>

@@ -74,11 +74,10 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => setSelectedIndex(idx)}
-                className={`relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-100 transition-all cursor-pointer focus:outline-hidden ${
-                  isActive
-                    ? 'ring-2 ring-[#5B21B6] ring-offset-2 scale-[1.02] shadow-xs'
+                className={`relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-100 transition-all cursor-pointer focus:outline-hidden ${isActive
+                    ? 'ring-2 ring-[var(--cor-primaria)] ring-offset-2 scale-[1.02] shadow-xs'
                     : 'opacity-70 hover:opacity-100 hover:scale-[1.01]'
-                }`}
+                  }`}
               >
                 <img
                   src={img}
