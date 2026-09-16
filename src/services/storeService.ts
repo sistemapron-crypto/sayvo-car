@@ -5,6 +5,9 @@ export interface StoreConfig {
   nomeLoja?: string;
   whatsapp?: string;
   bannerUrl?: string;
+  bannerTitulo?: string;
+  bannerSubtitulo?: string;
+  bannerPosicao?: string;
   logoUrl?: string;
   logoTamanho?: number;
   endereco?: string;

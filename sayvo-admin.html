@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAYVO Auto Admin – Painel de Gestão de Veículos</title>
+  <meta name="description"
+    content="Painel profissional de gestão para revenda de veículos SAYVO com controle de estoque, vendas, financeiro e configurações integradas ao Firebase." />
+  <meta property="og:title" content="SAYVO Auto Admin – Painel de Gestão de Veículos" />
+  <meta property="og:description"
+    content="Painel profissional de gestão para revenda de veículos SAYVO com controle de estoque, vendas, financeiro e configurações integradas ao Firebase." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="./sayvo-admin-theme.css">
+</head>
+
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen">
+    <div class="login-brand">
+      <div class="login-brand-logo">
+        <i class="fa-solid fa-car-rear" style="color:var(--accent);"></i>
+        <span>SAYVO<span class="accent">.AUTO</span></span>
+      </div>
+      <span class="login-badge">Painel de Gestão da Revenda</span>
+    </div>
+
+    <div class="login-box">
+      <div class="form-group">
+        <label>E-mail Corporativo</label>
+        <input type="email" id="email-input" placeholder="admin@revenda.com.br" autofocus autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Senha de Acesso</label>
+        <input type="password" id="senha-input" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <span id="login-error">Credenciais inválidas. Verifique seu e-mail e senha.</span>
+      <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar Painel
+      </button>
+    </div>
+  </div>
+
+  <!-- APLICAÇÃO ADMIN PRINCIPAL -->
+  <div id="app">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Abrir Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="topbar-brand">
+          <div style="display:flex; align-items:center;">
+            <img src="./admin/sayvo-auto.png" alt="SAYVO AUTO" style="height:52px; width:auto; object-fit:contain;">
+          </div>
+
+          <span class="topbar-tag">SISTEMA</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="topbar-badge">
+          <i class="fa-solid fa-warehouse"></i>
+          <span id="topbar-count">Carregando estoque...</span>
+        </div>
+        <button class="logout-btn" onclick="fazerLogout()" title="Sair do sistema">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+        </button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="main-sidebar">
+        <!-- CABEÇALHO DO MENU MOBILE -->
+        <div class="mobile-sidebar-header">
+          <div class="mobile-sidebar-brand">
+            <i class="fa-solid fa-car" style="color:var(--accent);"></i>
+            <span>SAYVO<span style="color:var(--accent);">AUTO</span></span>
+          </div>
+          <button class="mobile-sidebar-close" onclick="fecharMobileSidebar()" aria-label="Fechar Menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- ÁREA DE IDENTIDADE DA REVENDA CLIENTE -->
+        <div class="sidebar-identity">
+          <div class="sidebar-dealer-card" id="sidebar-dealer-card">
+            <span class="dealer-card-badge">Identidade da Loja</span>
+            <div class="dealer-logo-slot" id="sidebar-dealer-logo-slot">
+              <img id="sidebar-dealer-logo-img" src="" alt="Logo da Loja" style="display:none;">
+              <div id="sidebar-dealer-logo-placeholder" class="dealer-logo-placeholder">
+                <i class="fa-solid fa-car-rear"></i>
+              </div>
+            </div>
+            <div class="dealer-name-wrap">
+              <span class="dealer-name" id="sidebar-dealer-name">Carregando loja...</span>
+            </div>
+          </div>
+        </div>
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section-title">Principal</div>
+        <button class="side-btn active" data-tab="dashboard" onclick="mudarTab('dashboard', this)">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Visão Geral</span>
+        </button>
+        <button class="side-btn" data-tab="produtos" onclick="mudarTab('produtos', this)">
+          <i class="fa-solid fa-car"></i>
+          <span>Estoque de Veículos</span>
+        </button>
+
+        <div class="nav-section-title">Comercial & Vendas</div>
+        <button class="side-btn" data-tab="pdv" onclick="mudarTab('pdv', this)">
+          <i class="fa-solid fa-handshake"></i>
+          <span>Vendas (PDV)</span>
+        </button>
+        <button class="side-btn" data-tab="contas-a-receber" onclick="ativarAbaContasAReceber(this)">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Financeiro / Cobrança</span>
+        </button>
+        <button class="side-btn" data-tab="relatorio" onclick="mudarTab('relatorio', this)">
+          <i class="fa-solid fa-chart-column"></i>
+          <span>Relatórios</span>
+        </button>
+
+        <div class="nav-section-title">Catálogo & Loja</div>
+        <button class="side-btn" data-tab="categorias" onclick="mudarTab('categorias', this)">
+          <i class="fa-solid fa-tags"></i>
+          <span>Categorias</span>
+        </button>
+        <button class="side-btn" data-tab="marcas" onclick="mudarTab('marcas', this)">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Marcas</span>
+        </button>
+        <button class="side-btn" data-tab="config" onclick="mudarTab('config', this)">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Configurações</span>
+        </button>
+
+        <div class="nav-section-title" style="margin-top:10px;">Outros</div>
+        <button class="side-btn" data-tab="cupons" onclick="mudarTab('cupons', this)">
+          <i class="fa-solid fa-ticket"></i>
+          <span>Cupons Promocionais</span>
+        </button>
+      </aside>
+
+      <!-- BACKDROP DO MENU MOBILE -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="fecharMobileSidebar()"></div>
+
+      <!-- CONTEÚDO PRINCIPAL -->
+      <main class="content">
+
+        <!-- 1. DASHBOARD / VISÃO GERAL -->
+        <div id="tab-dashboard" class="tab-panel active">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-gauge-high" style="color:var(--accent);"></i> Visão Geral da Revenda</h2>
+              <p>Métricas em tempo real de estoque, negociações e contas a receber.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary" onclick="mudarTab('produtos'); abrirModalCriar();">
+                <i class="fa-solid fa-plus"></i> Novo Veículo
+              </button>
+              <button class="btn btn-dark" onclick="mudarTab('pdv')">
+                <i class="fa-solid fa-cart-shopping"></i> Nova Venda
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Veículos no Estoque</span>
+                <div class="stat-card-icon accent-glow"><i class="fa-solid fa-car"></i></div>
+              </div>
+              <div class="num" id="dash-estoque-total">0</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Veículos Ativos (Vitrine)</span>
+                <div class="stat-card-icon"><i class="fa-solid fa-circle-check" style="color:var(--success);"></i></div>
+              </div>
+              <div class="num" id="dash-estoque-ativos">0</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Veículos em Destaque</span>
+                <div class="stat-card-icon"><i class="fa-solid fa-star" style="color:#eab308;"></i></div>
+              </div>
+              <div class="num" id="dash-estoque-destaques">0</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Vendas Hoje</span>
+                <div class="stat-card-icon"><i class="fa-solid fa-receipt"></i></div>
+              </div>
+              <div class="num" id="dash-vendas-hoje-qtd">0</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Faturamento Hoje</span>
+                <div class="stat-card-icon accent-glow"><i class="fa-solid fa-dollar-sign"></i></div>
+              </div>
+              <div class="num" id="dash-vendas-hoje-total">R$ 0,00</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="lbl">Saldo a Receber Pendente</span>
+                <div class="stat-card-icon"><i class="fa-solid fa-clock" style="color:var(--danger);"></i></div>
+              </div>
+              <div class="num" id="dash-financeiro-pendente" style="color:var(--danger);">R$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- RECENT ADDITIONS -->
+          <div class="section-header" style="margin-top:32px; margin-bottom:16px;">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Veículos Recentes no Pátio</h3>
+            <button class="btn btn-ghost btn-sm" onclick="mudarTab('produtos')">Ver todos os veículos</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Veículo</th>
+                  <th>Ano Fab/Mod</th>
+                  <th>Preço</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-vehicles">
+                <tr>
+                  <td colspan="4" class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. ESTOQUE DE VEÍCULOS (PRODUTOS) -->
+        <div id="tab-produtos" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-car-side" style="color:var(--accent);"></i> Gestão de Estoque de Veículos</h2>
+              <p>Cadastre, edite informações, fotos, preços e destaque os automóveis na vitrine pública.</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalCriar()">
+              <i class="fa-solid fa-plus"></i> Cadastrar Veículo
+            </button>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="num" id="stat-total">–</div>
+              <div class="lbl">Total no Pátio</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="stat-ativos" style="color:var(--success);">–</div>
+              <div class="lbl">Ativos no Site</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="stat-destaque" style="color:#b45309;">–</div>
+              <div class="lbl">Destaques Vitrine</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="stat-cats">–</div>
+              <div class="lbl">Categorias Ativas</div>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <input type="text" id="busca-input" placeholder="🔍 Buscar por marca, modelo, versão..."
+              oninput="filtrar()">
+            <select id="filtro-cat" onchange="filtrar()">
+              <option value="">Todas as categorias</option>
+            </select>
+            <select id="filtro-status" onchange="filtrar()">
+              <option value="">Todos os status</option>
+              <option value="ativo">Ativos na Vitrine</option>
+              <option value="inativo">Inativos</option>
+              <option value="destaque">Destaques da Loja</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Veículo</th>
+                  <th>ID</th>
+                  <th>Categoria & Especificações</th>
+                  <th>Preço de Venda</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-corpo">
+                <tr>
+                  <td colspan="6">
+                    <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando estoque...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. CATEGORIAS -->
+        <div id="tab-categorias" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-tags" style="color:var(--accent);"></i> Categorias de Veículos</h2>
+              <p>Gerencie as carrocerias e categorias exibidas no filtro do site.</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalCategoria()">
+              <i class="fa-solid fa-plus"></i> Nova Categoria
+            </button>
+          </div>
+
+          <div class="cat-grid" id="cat-grid">
+            <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando categorias...</div>
+          </div>
+        </div>
+
+        <!-- 4. MARCAS -->
+        <div id="tab-marcas" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i> Montadoras & Marcas</h2>
+              <p>Cadastre marcas automotivas para facilitar a seleção e busca dos clientes.</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalMarca()">
+              <i class="fa-solid fa-plus"></i> Nova Marca
+            </button>
+          </div>
+
+          <div class="cat-grid" id="marca-grid">
+            <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando marcas...</div>
+          </div>
+        </div>
+
+        <!-- 5. VENDAS (PDV) -->
+        <div id="tab-pdv" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-handshake" style="color:var(--accent);"></i> Balcão de Vendas & Negociação</h2>
+              <p>Registre a venda de veículos, simule parcelamentos e gere pedidos.</p>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="num" id="pdv-stat-qtd">–</div>
+              <div class="lbl">Negociações hoje</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="pdv-stat-total" style="color:var(--text-main); font-weight:800;">–</div>
+              <div class="lbl">Total faturado hoje</div>
+            </div>
+          </div>
+
+          <div class="pdv-layout">
+            <div class="pdv-products">
+              <input type="text" id="pdv-busca"
+                placeholder="🔍 Localizar veículo no estoque por nome, marca ou modelo..." oninput="renderPdvGrid()">
+              <div class="pdv-grid" id="pdv-grid"></div>
+            </div>
+
+            <!-- CARRINHO / CONDICIONAMENTO DA NEGOCIAÇÃO -->
+            <div class="pdv-cart">
+              <h3><i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Negociação Atual</h3>
+              <div id="pdv-cart-items">
+                <div class="pdv-cart-empty">Nenhum veículo selecionado. Clique em um veículo no estoque ao lado para
+                  iniciar.</div>
+              </div>
+
+              <div class="pdv-cupom-row">
+                <input type="text" id="pdv-cupom-input" placeholder="Código de desconto/voucher"
+                  style="text-transform:uppercase">
+                <button class="btn btn-ghost btn-sm" onclick="pdvAplicarCupom()">Aplicar</button>
+              </div>
+
+              <div class="form-group">
+                <label>Desconto Comercial Direto (R$)</label>
+                <input type="number" id="pdv-desconto-manual" min="0" step="0.01" placeholder="0.00"
+                  oninput="renderPdvCart()">
+              </div>
+
+              <div class="form-group">
+                <label for="pdv-pagamento">Forma Principal de Pagamento</label>
+                <select id="pdv-pagamento" onchange="toggleOpcoesAPrazo()">
+                  <option value="dinheiro">À Vista (Dinheiro / Transferência)</option>
+                  <option value="pix">PIX</option>
+                  <option value="debito">Cartão de Débito</option>
+                  <option value="credito">Cartão de Crédito / Financiamento</option>
+                  <option value="prazo">A Prazo / Parcelado Próprio</option>
+                </select>
+              </div>
+
+              <label class="toggle-row">
+                <input type="checkbox" id="pdv-pagamento-dividir"
+                  onchange="pdvTogglePagamentoDividido(); toggleOpcoesAPrazo();">
+                Dividir pagamento em 2 formas (ex: Entrada + Parcelado)
+              </label>
+
+              <div id="pdv-pagamento2-area" style="display:none; flex-direction:column; gap:12px;">
+                <div class="form-group">
+                  <label>2ª Forma de Pagamento</label>
+                  <select id="pdv-pagamento2">
+                    <option value="dinheiro">À Vista (Dinheiro / Transferência)</option>
+                    <option value="pix">PIX</option>
+                    <option value="debito">Cartão de Débito</option>
+                    <option value="credito" selected>Cartão de Crédito / Financiamento</option>
+                    <option value="prazo">A Prazo / Parcelado Próprio</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="pdv-valor-pagamento2">Valor pago na 2ª forma (R$)</label>
+                  <input type="number" id="pdv-valor-pagamento2" min="0" step="0.01" placeholder="0.00"
+                    oninput="renderPdvCart(); calcularSimulacaoParcelas();">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Nome do Comprador / Cliente</label>
+                <input type="text" id="pdv-cliente" placeholder="Nome completo do comprador">
+              </div>
+
+              <div class="form-group">
+                <label for="pdv-cliente-telefone">WhatsApp / Telefone do Comprador</label>
+                <input type="tel" id="pdv-cliente-telefone" placeholder="(00) 00000-0000" maxlength="15">
+              </div>
+
+              <!-- SIMULADOR A PRAZO -->
+              <div id="pdv-container-a-prazo"
+                style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:var(--radius-sm); margin:10px 0;">
+                <div class="form-group">
+                  <label for="pdv-porcentagem-acrescimo">Taxa de Juros / Acréscimo (%)</label>
+                  <input type="number" id="pdv-porcentagem-acrescimo" min="0" step="0.1" value="0"
+                    oninput="calcularSimulacaoParcelas()">
+                </div>
+
+                <div class="form-group" style="margin-top:10px;">
+                  <label for="pdv-qtd-parcelas">Número de Parcelas</label>
+                  <select id="pdv-qtd-parcelas" onchange="calcularSimulacaoParcelas()">
+                    <option value="1">1x (Entrada / 30 dias)</option>
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                    <option value="5">5x</option>
+                    <option value="6">6x</option>
+                    <option value="10">10x</option>
+                    <option value="12">12x</option>
+                    <option value="24">24x</option>
+                    <option value="36">36x</option>
+                    <option value="48">48x</option>
+                  </select>
+                </div>
+
+                <div id="pdv-resumo-parcelamento"
+                  style="background:#0f172a; color:#f8fafc; padding:12px; border-radius:6px; font-weight:bold; margin-top:12px; font-size:0.9rem;">
+                </div>
+              </div>
+
+              <div class="pdv-totals-row"><span>Valor Bruto:</span><span id="pdv-subtotal">R$ 0,00</span></div>
+              <div class="pdv-totals-row"><span>Desconto Aplicado:</span><span id="pdv-desconto-total">R$ 0,00</span>
+              </div>
+              <div class="pdv-totals-row total"><span>Total da Venda:</span><span id="pdv-total">R$ 0,00</span></div>
+              <div id="pdv-split-resumo" style="display:none; flex-direction:column; gap:4px; margin-top:8px;"></div>
+
+              <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="pdvFinalizarVenda()">
+                <i class="fa-solid fa-check-double"></i> Concluir Negociação
+              </button>
+              <button class="btn btn-ghost" style="width:100%; margin-top:6px;" onclick="pdvLimparCarrinho()">
+                <i class="fa-solid fa-rotate-left"></i> Limpar Negociação
+              </button>
+            </div>
+          </div>
+
+          <!-- HISTÓRICO DE HOJE -->
+          <div style="margin-top:36px;">
+            <div class="section-header" style="margin-bottom:14px;">
+              <h3><i class="fa-solid fa-clock-rotate-left"></i> Vendas Concluídas Hoje</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Horário</th>
+                    <th>Comprador</th>
+                    <th>Veículos Negociados</th>
+                    <th>Condição de Pagamento</th>
+                    <th>Total da Venda</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="pdv-vendas-tabela">
+                  <tr>
+                    <td colspan="6">
+                      <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando vendas...</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. FINANCEIRO (CONTAS A RECEBER) -->
+        <div id="tab-contas-a-receber" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Gestão Financeira &
+                Cobrança</h2>
+              <p>Acompanhe parcelas pendentes, envie notificações automáticas via WhatsApp e registre baixas.</p>
+            </div>
+            <button class="btn btn-primary" id="add-conta-manual-btn">
+              <i class="fa-solid fa-plus"></i> Nova Conta Manual
+            </button>
+          </div>
+
+          <div class="cr-metrics-grid">
+            <div class="cr-metric-card pendente">
+              <span class="cr-metric-label">Total a Receber Pendente</span>
+              <span class="cr-metric-value" id="cr-total-pendente" style="color:var(--danger);">R$ 0,00</span>
+            </div>
+            <div class="cr-metric-card quitado">
+              <span class="cr-metric-label">Total Já Recebido</span>
+              <span class="cr-metric-value" id="cr-total-recebido" style="color:var(--success);">R$ 0,00</span>
+            </div>
+            <div class="cr-metric-card total">
+              <span class="cr-metric-label">Volume Total Negociado a Prazo</span>
+              <span class="cr-metric-value" id="cr-total-geral">R$ 0,00</span>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <input type="text" id="contas-a-receber-search"
+              placeholder="🔍 Filtrar por comprador, telefone, ID de contrato...">
+          </div>
+
+          <div id="contas-a-receber-list-container">
+            <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando contas a receber...</div>
+          </div>
+        </div>
+
+        <!-- 7. RELATÓRIO MENSAL -->
+        <div id="tab-relatorio" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-chart-line" style="color:var(--accent);"></i> Relatório de Desempenho e Vendas
+              </h2>
+              <p>Acompanhe o volume faturado, quantidade de vendas e ticket médio mês a mês.</p>
+            </div>
+            <div class="toolbar" style="margin-bottom:0;">
+              <input type="month" id="relatorio-mes" onchange="carregarRelatorio()">
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="num" id="relatorio-stat-qtd">–</div>
+              <div class="lbl">Veículos vendidos no mês</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="relatorio-stat-total" style="color:var(--text-main); font-weight:800;">–</div>
+              <div class="lbl">Faturamento total no período</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="relatorio-stat-ticket">–</div>
+              <div class="lbl">Ticket médio por venda</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Hora</th>
+                  <th>Comprador</th>
+                  <th>Veículos</th>
+                  <th>Condição de Pagamento</th>
+                  <th>Valor Total</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="relatorio-tabela">
+                <tr>
+                  <td colspan="7">
+                    <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando relatório...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 8. CONFIGURAÇÕES DA LOJA -->
+        <div id="tab-config" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-sliders" style="color:var(--accent);"></i> Configurações da Revenda</h2>
+              <p>Personalize os dados cadastrais da loja, localização no mapa, banner da vitrine e cores.</p>
+            </div>
+            <button class="btn btn-primary" onclick="salvarConfiguracoes()">
+              <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+            </button>
+          </div>
+
+          <div class="config-layout">
+            <!-- BLOCO 1: IDENTIDADE -->
+            <div class="config-card">
+              <div class="config-card-title"><i class="fa-solid fa-id-card"></i> Identidade & Logo da Revenda</div>
+              <div class="form-group">
+                <label>Nome da Revenda / Concessionária</label>
+                <input type="text" id="config-nome-loja" placeholder="Ex: SAYVO Veículos Premium">
+              </div>
+
+              <div class="form-group" id="config-logo-upload-area">
+                <label>Logotipo da Loja (PNG com fundo transparente)</label>
+                <input type="file" id="config-logo-imagem-file" accept="image/*" style="display:none">
+                <div class="upload-btn-area" onclick="document.getElementById('config-logo-imagem-file').click()">
+                  <i class="fa-solid fa-image" style="font-size:1.4rem; margin-bottom:6px; display:block;"></i>
+                  Clique para selecionar novo logo
+                </div>
+                <div class="upload-preview" id="config-logo-upload-preview" style="display:none; margin-top:10px;">
+                  <img id="config-logo-upload-preview-img" src="" alt="preview"
+                    style="max-height:80px; object-fit:contain;">
+                  <p id="config-logo-upload-filename" style="font-size:0.75rem; color:var(--text-muted);"></p>
+                  <button type="button" class="btn btn-ghost" onclick="cancelarNovoLogoSelecionado()"
+                    style="font-size:0.75rem; padding:4px 8px; color:var(--text-muted); margin-top:4px;">
+                    <i class="fa-solid fa-xmark"></i> Cancelar seleção de novo arquivo
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style="background:radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%), #161b24; border:1px solid #283344; border-radius:8px; padding:16px; text-align:center;">
+                <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:8px;">Logo atual
+                  em exibição no Admin e Catálogo:</span>
+                <img id="config-logo-preview-atual" src="" alt="logo atual"
+                  style="max-width:200px; max-height:80px; object-fit:contain; display:none; margin:auto; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));">
+                <span id="config-logo-sem-logo" style="font-size:0.8rem; color:var(--text-muted); display:none;">Nenhum
+                  logotipo personalizado cadastrado no momento. A sidebar exibe o ícone padrão da loja.</span>
+                <button type="button" class="btn btn-ghost" id="config-btn-remover-logo" onclick="removerLogoAtual()"
+                  style="color:#ef4444; font-size:0.78rem; padding:5px 12px; margin-top:10px; display:none; align-items:center; justify-content:center; gap:6px; border:1px solid rgba(239,68,68,0.25); margin-left:auto; margin-right:auto;">
+                  <i class="fa-solid fa-trash-can"></i> Remover Logotipo
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label for="config-logo-tamanho">Tamanho do Logotipo na Vitrine (pixels)</label>
+                <input type="range" id="config-logo-tamanho" min="60" max="300" step="5" value="160">
+              </div>
+            </div>
+
+            <!-- BLOCO 2: BANNER PRINCIPAL -->
+            <div class="config-card">
+              <div class="config-card-title"><i class="fa-solid fa-panorama"></i> Banner de Destaque da Vitrine</div>
+              <div class="form-group" id="config-banner-upload-area">
+                <label>Imagem do Banner</label>
+                <input type="file" id="config-banner-imagem-file" accept="image/*" style="display:none">
+                <div class="upload-btn-area" onclick="document.getElementById('config-banner-imagem-file').click()">
+                  <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.4rem; margin-bottom:6px; display:block;"></i>
+                  Selecionar foto do banner (1600x600 recomendado)
+                </div>
+                <div class="upload-preview" id="config-banner-upload-preview" style="display:none; margin-top:10px;">
+                  <img id="config-banner-upload-preview-img" src="" alt="preview banner"
+                    style="width:100%; max-height:100px; object-fit:cover; border-radius:6px;">
+                  <p id="config-banner-upload-filename" style="font-size:0.75rem; color:var(--text-muted);"></p>
+                </div>
+              </div>
+
+              <img id="config-banner-preview-atual" src="" alt="banner atual"
+                style="width:100%; max-height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--border); display:none;">
+
+              <div class="form-group">
+                <label>Título do Banner</label>
+                <input type="text" id="config-banner-titulo"
+                  placeholder="Ex: Encontre seu próximo carro com garantia total">
+              </div>
+
+              <div class="form-group">
+                <label>Subtítulo / Chamada</label>
+                <textarea id="config-banner-subtitulo" rows="2"
+                  placeholder="Veículos selecionados, periciados e com as melhores taxas do mercado."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Alinhamento do Texto</label>
+                <select id="config-banner-posicao">
+                  <option value="esquerda">Alinhado à Esquerda</option>
+                  <option value="direita">Alinhado à Direita</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- BLOCO 3: ATENDIMENTO & CONTATO -->
+            <div class="config-card">
+              <div class="config-card-title"><i class="fa-brands fa-whatsapp"></i> Contato & WhatsApp de Vendas</div>
+              <div class="form-group">
+                <label>WhatsApp Comercial para Recebimento de Propostas</label>
+                <input type="text" id="config-whatsapp" placeholder="Ex: 5581999999999 (apenas números com DDI + DDD)">
+                <small style="color:var(--text-muted);">Clientes da vitrine serão direcionados a este número ao clicar
+                  em 'Tenho Interesse'.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Endereço Físico do Showroom</label>
+                <input type="text" id="config-endereco"
+                  placeholder="Ex: Av. das Américas, 2500 - Barra, Rio de Janeiro - RJ">
+              </div>
+
+              <div class="config-grid-2col" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                  <label>Latitude (Google Maps)</label>
+                  <input type="number" id="config-latitude" step="any" placeholder="Ex: -23.55052">
+                </div>
+                <div class="form-group">
+                  <label
+                    style="display:block; width:100%; max-width:100%; box-sizing:border-box; word-break:break-word; line-height:1.25;">Longitude
+                    (Google Maps)</label>
+                  <input type="number" id="config-longitude" step="any" placeholder="Ex: -46.633308"
+                    style="width:100%; max-width:100%; min-width:0; box-sizing:border-box; display:block;">
+                </div>
+              </div>
+            </div>
+
+            <!-- BLOCO 4: HORÁRIOS & ATENDIMENTO -->
+            <div class="config-card">
+              <div class="config-card-title"><i class="fa-solid fa-calendar-days"></i> Horários de Visitação & Test
+                Drive</div>
+              <div class="form-group">
+                <label>Dias de Funcionamento</label>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-0"> Dom</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-1"> Seg</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-2"> Ter</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-3"> Qua</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-4"> Qui</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-5"> Sex</label>
+                  <label class="toggle-row"><input type="checkbox" id="config-dia-6"> Sáb</label>
+                </div>
+              </div>
+
+              <div class="config-grid-2col" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                  <label>Abertura do Showroom</label>
+                  <input type="time" id="config-hora-inicio">
+                </div>
+                <div class="form-group">
+                  <label>Encerramento</label>
+                  <input type="time" id="config-hora-fim">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Intervalo para Agendamentos (minutos)</label>
+                <input type="number" id="config-intervalo" min="15" step="15" placeholder="60">
+              </div>
+
+              <div class="form-group"
+                style="margin-top:12px; padding-top:14px; border-top:1px solid var(--border-subtle);">
+                <label>Identidade Cromática do Site Público</label>
+                <div style="display:flex; gap:16px; align-items:center; margin-top:6px;">
+                  <div style="text-align:center;">
+                    <input type="color" id="config-cor-primaria" value="#aeee02"
+                      style="width:48px; height:36px; cursor:pointer;">
+                    <span style="font-size:0.7rem; display:block; color:var(--text-muted);">Primária</span>
+                  </div>
+                  <div style="text-align:center;">
+                    <input type="color" id="config-cor-secundaria" value="#000000"
+                      style="width:48px; height:36px; cursor:pointer;">
+                    <span style="font-size:0.7rem; display:block; color:var(--text-muted);">Fundo</span>
+                  </div>
+                  <div style="text-align:center;">
+                    <input type="color" id="config-cor-destaque" value="#FFFFFF"
+                      style="width:48px; height:36px; cursor:pointer;">
+                    <span style="font-size:0.7rem; display:block; color:var(--text-muted);">Destaque</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. CUPONS PROMOCIONAIS -->
+        <div id="tab-cupons" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-ticket" style="color:var(--accent);"></i> Cupons Promocionais & Vouchers</h2>
+              <p>Gerencie códigos de bônus, desconto na entrada ou vantagens para fechar negócios.</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalCupom()">
+              <i class="fa-solid fa-plus"></i> Novo Cupom
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Modalidade</th>
+                  <th>Benefício</th>
+                  <th>Pedido Mínimo</th>
+                  <th>Validade</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cupons-tabela-corpo">
+                <tr>
+                  <td colspan="7">
+                    <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando cupons...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MODAIS DO SISTEMA ══════════════════ -->
+
+  <!-- MODAL: CADASTRAR / EDITAR VEÍCULO -->
+  <div class="modal-overlay" id="modal-produto">
+    <div class="modal">
+      <button class="modal-close" onclick="fecharModal('modal-produto')">&times;</button>
+      <h2 id="modal-titulo"><i class="fa-solid fa-car"></i> Veículo</h2>
+
+      <div class="form-grid">
+        <input type="hidden" id="form-id">
+
+        <!-- 1. IDENTIFICAÇÃO -->
+        <div class="form-section-header"><i class="fa-solid fa-id-card"></i> 1. Identificação do Veículo</div>
+
+        <div class="form-group full">
+          <label>Título Comercial do Anúncio *</label>
+          <input type="text" id="form-nome" placeholder="Ex: Toyota Corolla XEi 2.0 Automático">
+        </div>
+
+        <div class="form-group">
+          <label>Montadora / Marca *</label>
+          <select id="form-marca">
+            <option value="">Selecione uma marca...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Modelo *</label>
+          <input type="text" id="form-modelo" placeholder="Ex: Corolla">
+        </div>
+
+        <div class="form-group">
+          <label>Versão / Acabamento</label>
+          <input type="text" id="form-versao" placeholder="Ex: XEi 2.0 Flex">
+        </div>
+
+        <div class="form-group">
+          <label>Carroceria / Categoria *</label>
+          <select id="form-categoria">
+            <option value="">Selecione a categoria...</option>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Hatch">Hatch</option>
+            <option value="Pickup">Pickup</option>
+            <option value="Utilitário">Utilitário</option>
+            <option value="Esportivo">Esportivo</option>
+          </select>
+        </div>
+
+        <!-- 2. ESPECIFICAÇÕES -->
+        <div class="form-section-header"><i class="fa-solid fa-gears"></i> 2. Ficha Técnica</div>
+
+        <div class="form-group">
+          <label>Ano de Fabricação *</label>
+          <input type="number" id="form-ano-fabricacao" placeholder="Ex: 2023" min="1950" max="2050">
+        </div>
+
+        <div class="form-group">
+          <label>Ano do Modelo *</label>
+          <input type="number" id="form-ano-modelo" placeholder="Ex: 2024" min="1950" max="2050">
+        </div>
+
+        <div class="form-group">
+          <label>Quilometragem (KM)</label>
+          <input type="number" id="form-km" placeholder="Ex: 45000" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Transmissão / Câmbio</label>
+          <select id="form-cambio">
+            <option value="">Selecione o câmbio...</option>
+            <option value="Manual">Manual</option>
+            <option value="Automático">Automático</option>
+            <option value="CVT">Automático CVT</option>
+            <option value="Automatizado">Automatizado</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Combustível</label>
+          <select id="form-combustivel">
+            <option value="">Selecione o combustível...</option>
+            <option value="Flex">Flex (Gasolina/Etanol)</option>
+            <option value="Gasolina">Gasolina</option>
+            <option value="Etanol">Etanol</option>
+            <option value="Diesel">Diesel</option>
+            <option value="Híbrido">Híbrido</option>
+            <option value="Elétrico">100% Elétrico</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Cor do Veículo</label>
+          <input type="text" id="form-cor" placeholder="Ex: Branco Pérola">
+        </div>
+
+        <!-- 3. COMERCIAL -->
+        <div class="form-section-header"><i class="fa-solid fa-dollar-sign"></i> 3. Condições Comerciais & Vitrine</div>
+
+        <div class="form-group full">
+          <label>Preço de Venda (R$) *</label>
+          <input type="number" id="form-preco" placeholder="Ex: 125000.00" step="0.01" min="0">
+        </div>
+
+        <div class="form-group full form-toggles-box"
+          style="flex-direction:row; gap:28px; align-items:center; background:#f8fafc; padding:14px; border-radius:8px; border:1px solid var(--border);">
+          <label class="toggle-row">
+            <input type="checkbox" id="form-ativo" checked>
+            <span>Veículo Ativo (Disponível e visível na vitrine pública)</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="form-destaque">
+            <span>Destacar na Página Inicial</span>
+          </label>
+        </div>
+
+        <!-- 4. FOTOS E GALERIA -->
+        <div class="form-section-header"><i class="fa-solid fa-camera"></i> 4. Galeria de Fotos do Veículo</div>
+
+        <div class="form-group full">
+          <div class="img-tabs">
+            <button type="button" id="tab-url" class="btn btn-primary btn-sm" onclick="alternarAbaImagem('url')">
+              <i class="fa-solid fa-link"></i> Inserir Link/URL
+            </button>
+            <button type="button" id="tab-upload" class="btn btn-ghost btn-sm" onclick="alternarAbaImagem('upload')">
+              <i class="fa-solid fa-camera"></i> Fazer Upload / Câmera
+            </button>
+          </div>
+
+          <div id="img-url-area">
+            <div class="image-url-row">
+              <input type="text" id="form-imagem" placeholder="Cole aqui o link direto da imagem (https://...)">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarImagemPorUrl()">
+                <i class="fa-solid fa-plus"></i> Adicionar Foto
+              </button>
+            </div>
+          </div>
+
+          <div id="img-upload-area" style="display:none">
+            <input type="file" id="form-imagem-file" accept="image/*" multiple style="display:none">
+            <div class="upload-btn-area" onclick="document.getElementById('form-imagem-file').click()">
+              <i class="fa-solid fa-cloud-arrow-up"
+                style="font-size:1.8rem; margin-bottom:8px; color:var(--text-muted); display:block;"></i>
+              <span>Clique aqui para selecionar fotos do computador ou celular</span>
+              <span style="font-size:0.75rem; color:var(--text-light); display:block; margin-top:4px;">(Suporta seleção
+                múltipla com compressão automática)</span>
+            </div>
+          </div>
+
+          <div id="upload-preview-list" class="upload-preview-list"></div>
+        </div>
+
+        <!-- 5. DESCRIÇÃO E OPCIONAIS -->
+        <div class="form-section-header"><i class="fa-solid fa-list-check"></i> 5. Descrição & Opcionais</div>
+
+        <div class="form-group full">
+          <label>Opcionais, histórico de revisões e detalhes</label>
+          <textarea id="form-descricao" rows="4"
+            placeholder="Ex: Único dono, revisões na concessionária, teto solar, bancos em couro, laudo cautelar aprovado..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-produto')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarProduto()">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Veículo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CATEGORIA -->
+  <div class="modal-overlay" id="modal-categoria">
+    <div class="modal">
+      <button class="modal-close" onclick="fecharModal('modal-categoria')">&times;</button>
+      <h2><i class="fa-solid fa-tag"></i> Categoria de Veículos</h2>
+      <div class="form-grid">
+        <input type="hidden" id="cat-id-original">
+        <div class="form-group full">
+          <label>Nome da Categoria *</label>
+          <input type="text" id="cat-nome" placeholder="Ex: SUV Compacto">
+        </div>
+        <div class="form-group full">
+          <label>Identificador no Sistema (sem espaços) *</label>
+          <input type="text" id="cat-id" placeholder="ex: suv-compacto">
+        </div>
+        <div class="form-group full">
+          <label>Ícone FontAwesome</label>
+          <input type="text" id="cat-icone" placeholder="fa-car">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-categoria')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarCategoria()"><i class="fa-solid fa-floppy-disk"></i> Salvar
+          Categoria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MARCA -->
+  <div class="modal-overlay" id="modal-marca">
+    <div class="modal">
+      <button class="modal-close" onclick="fecharModal('modal-marca')">&times;</button>
+      <h2><i class="fa-solid fa-shield-halved"></i> Marca / Montadora</h2>
+      <div class="form-grid">
+        <input type="hidden" id="marca-id-original">
+        <div class="form-group full">
+          <label>Nome da Marca *</label>
+          <input type="text" id="marca-nome" placeholder="Ex: Honda">
+        </div>
+        <div class="form-group full">
+          <label>ID Interno *</label>
+          <input type="text" id="marca-id" placeholder="ex: honda">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-marca')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarMarca()"><i class="fa-solid fa-floppy-disk"></i> Salvar
+          Marca</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CUPOM -->
+  <div class="modal-overlay" id="modal-cupom">
+    <div class="modal">
+      <button class="modal-close" onclick="fecharModal('modal-cupom')">&times;</button>
+      <h2 id="cupom-modal-titulo"><i class="fa-solid fa-ticket"></i> Cupom Promocional</h2>
+      <div class="form-grid">
+        <input type="hidden" id="cupom-doc-id">
+        <div class="form-group full">
+          <label>Código do Cupom *</label>
+          <input type="text" id="cupom-codigo" placeholder="Ex: PRIMEIRACOMPRA" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Benefício *</label>
+          <select id="cupom-tipo">
+            <option value="percentual">Desconto Percentual (%)</option>
+            <option value="fixo">Desconto em Valor Fixo (R$)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor do Desconto *</label>
+          <input type="number" id="cupom-valor" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Valor Mínimo da Negociação (R$)</label>
+          <input type="number" id="cupom-valor-minimo" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Data de Validade</label>
+          <input type="date" id="cupom-validade">
+        </div>
+        <div class="form-group full">
+          <label class="toggle-row">
+            <input type="checkbox" id="cupom-ativo" checked>
+            <span>Cupom ativo e válido para aplicação no PDV</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-cupom')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarCupom()"><i class="fa-solid fa-floppy-disk"></i> Salvar
+          Cupom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EXCLUSÃO CONFIRMAR -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal" style="width:420px;">
+      <button class="modal-close" onclick="fecharModal('confirm-modal')">&times;</button>
+      <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Confirmar Exclusão</h2>
+      <p id="confirm-msg" style="color:var(--text-muted); font-size:0.92rem; line-height:1.5; margin-bottom:20px;">
+        Tem certeza que deseja remover este item?
+      </p>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('confirm-modal')">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-ok-btn"><i class="fa-solid fa-trash"></i> Confirmar Exclusão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTA A RECEBER MANUAL -->
+  <div class="modal-overlay" id="modal-conta-a-receber">
+    <div class="modal">
+      <button class="modal-close" onclick="fecharModal('modal-conta-a-receber')">&times;</button>
+      <h2 id="conta-a-receber-modal-titulo"><i class="fa-solid fa-file-invoice-dollar"></i> Conta a Receber</h2>
+      <div class="form-grid">
+        <input type="hidden" id="conta-a-receber-doc-id">
+        <div class="form-group full">
+          <label for="conta-a-receber-cliente">Nome do Comprador / Cliente *</label>
+          <input type="text" id="conta-a-receber-cliente" placeholder="Nome completo do devedor">
+        </div>
+        <div class="form-group full">
+          <label for="conta-a-receber-telefone">WhatsApp / Telefone para Cobrança</label>
+          <input type="tel" id="conta-a-receber-telefone" placeholder="(00) 00000-0000" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label for="conta-a-receber-valor">Valor Total do Saldo (R$) *</label>
+          <input type="number" id="conta-a-receber-valor" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label for="conta-a-receber-valor-pago">Valor Já Amortizado (R$)</label>
+          <input type="number" id="conta-a-receber-valor-pago" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group full">
+          <label for="conta-a-receber-parcelas">Número de Parcelas</label>
+          <input type="number" id="conta-a-receber-parcelas" min="1" max="60" value="1" placeholder="1">
+        </div>
+        <div class="form-group full">
+          <label for="conta-a-receber-descricao">Descrição / Detalhes do Acordo</label>
+          <textarea id="conta-a-receber-descricao"
+            placeholder="Ex: Saldo residual da troca de veículo Corolla..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="fecharModal('modal-conta-a-receber')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarContaAReceber()">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Conta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR RECEBIMENTO -->
+  <div class="modal-overlay" id="modal-registrar-pagamento-conta-a-receber">
+    <div class="modal" style="width:480px;">
+      <button class="modal-close" onclick="fecharModal('modal-registrar-pagamento-conta-a-receber')">&times;</button>
+      <h2><i class="fa-solid fa-hand-holding-dollar" style="color:var(--success);"></i> Registrar Pagamento / Baixa</h2>
+      <input type="hidden" id="pagar-conta-a-receber-doc-id">
+
+      <div
+        style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:18px;">
+        <p style="margin-bottom:6px; font-size:0.9rem;">Comprador: <strong id="pagar-conta-a-receber-cliente"></strong>
+        </p>
+        <p style="margin-bottom:6px; font-size:0.9rem;">Telefone: <strong id="pagar-conta-a-receber-telefone"></strong>
+        </p>
+        <p style="margin-bottom:6px; font-size:0.9rem;">Valor Original: <strong
+            id="pagar-conta-a-receber-valor-total"></strong></p>
+        <p style="font-size:1.1rem; color:var(--danger); font-weight:800; margin-top:8px;">
+          Saldo Devedor Atual: <span id="pagar-conta-a-receber-valor-pendente"></span>
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="pagar-conta-a-receber-valor-pagar">Valor Recebido Nesta Parcela (R$) *</label>
+        <input type="number" id="pagar-conta-a-receber-valor-pagar" min="0" step="0.01" placeholder="0.00">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost"
+          onclick="fecharModal('modal-registrar-pagamento-conta-a-receber')">Cancelar</button>
+        <button class="btn btn-primary" onclick="registrarPagamentoContaAReceber()">
+          <i class="fa-solid fa-check"></i> Confirmar Recebimento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICAÇÃO TOAST -->
+  <div id="toast"></div>
+
+  <!-- SCRIPTS DO FIREBASE COMPAT (PRESERVADOS EXATAMENTE COMO NO ORIGINAL) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <!-- LÓGICA CORE DO ADMIN -->
+  <script src="./sayvo-admin-core.js"></script>
+</body>
+
+</html>
