@@ -305,9 +305,9 @@ function atualizarStats() {
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
   if (elTopCount) {
-  elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
-  elTopCount.setAttribute("data-count", todosProdutos.length);
-}
+    elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
+    elTopCount.setAttribute("data-count", todosProdutos.length);
+  }
 }
 
 function filtrar() {
@@ -1109,6 +1109,189 @@ function pdvCalcularValorAPrazo(total, pagamentos) {
   return total;
 }
 
+async function pdvFinalizarVenda() {
+
+  if (!pdvCarrinho.length) {
+    toast("Adicione ao menos um veículo para fechar a venda.", "err");
+    return;
+  }
+
+  const subtotal = pdvCalcularSubtotal();
+  const desconto = pdvCalcularDesconto(subtotal);
+  const totalOriginal = subtotal - desconto;
+  const pagamentos = pdvCalcularPagamentos(totalOriginal);
+
+  const cliente = document.getElementById("pdv-cliente")?.value.trim();
+  const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
+
+  if (
+    pagamentos.length > 1 &&
+    (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)
+  ) {
+    toast("Informe um valor válido para a 2ª forma de pagamento.", "err");
+    return;
+  }
+
+  const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
+
+  if (possuiAPrazo && !cliente) {
+    toast("Informe o nome do cliente para venda a prazo.", "err");
+    return;
+  }
+
+  let dadosPrazo = null;
+  let totalFinalVenda = totalOriginal;
+
+  if (possuiAPrazo) {
+
+    const valorBaseAPrazo = pdvCalcularValorAPrazo(
+      totalOriginal,
+      pagamentos
+    );
+
+    const acrescimoPct =
+      parseFloat(
+        document.getElementById("pdv-porcentagem-acrescimo")?.value
+      ) || 0;
+
+    const qtdParcelas =
+      parseInt(
+        document.getElementById("pdv-qtd-parcelas")?.value
+      ) || 1;
+
+    const valorJuros =
+      valorBaseAPrazo * (acrescimoPct / 100);
+
+    const valorTotalPrazoComJuros =
+      valorBaseAPrazo + valorJuros;
+
+    const valorParcela =
+      valorTotalPrazoComJuros / qtdParcelas;
+
+    totalFinalVenda =
+      (totalOriginal - valorBaseAPrazo) +
+      valorTotalPrazoComJuros;
+
+    dadosPrazo = {
+      valorBase: valorBaseAPrazo,
+      acrescimoPct,
+      valorJuros,
+      valorTotalPrazoComJuros,
+      qtdParcelas,
+      valorParcela
+    };
+  }
+
+  const venda = {
+    itens: pdvCarrinho.map(i => ({
+      docId: i.docId,
+      nome: i.nome,
+      preco: i.preco,
+      qtd: i.qtd
+    })),
+
+    subtotal,
+    desconto,
+    total: totalFinalVenda,
+
+    pagamentos,
+
+    pagamento: pagamentos
+      .map(p => PAG_LABEL[p.forma] || p.forma)
+      .join(" + "),
+
+    cliente: cliente || null,
+    telefone,
+
+    prazoDetalhes: dadosPrazo,
+
+    cupom: pdvCupomAplicado
+      ? pdvCupomAplicado.codigo
+      : null,
+
+    criadoEm:
+      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+
+    const refDoc =
+      await db.collection("vendas").add(venda);
+
+    if (possuiAPrazo && dadosPrazo) {
+
+      await db.collection("contasAReceber").add({
+
+        vendaId: refDoc.id,
+        pedidoId: refDoc.id,
+
+        cliente: cliente,
+        telefoneCliente: telefone || null,
+
+        valorOriginal:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        totalAReceber:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        totalPago: 0,
+
+        saldoRestante:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        qtdParcelas:
+          dadosPrazo.qtdParcelas,
+
+        valorParcela:
+          dadosPrazo.valorParcela,
+
+        statusVenda: "em_aberto",
+
+        descricao:
+          `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
+
+        criadoEm:
+          firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Marca os veículos vendidos como inativos
+    const batch = db.batch();
+
+    pdvCarrinho.forEach(item => {
+
+      const produtoRef =
+        db.collection("produtos").doc(item.docId);
+
+      batch.update(produtoRef, {
+        ativo: false
+      });
+
+    });
+
+    await batch.commit();
+
+    toast("Venda finalizada com sucesso!", "ok");
+
+    pdvLimparCarrinho();
+
+    await carregarProdutos();
+    await carregarVendasHoje();
+    await carregarContasAReceber();
+
+    atualizarDashboard();
+
+  } catch (e) {
+
+    console.error("Erro ao finalizar venda:", e);
+
+    toast(
+      "Erro ao finalizar venda: " + e.message,
+      "err"
+    );
+  }
+}
+
 function calcularSimulacaoParcelas() {
   const subtotal = pdvCalcularSubtotal();
   const desconto = pdvCalcularDesconto(subtotal);
@@ -1211,6 +1394,7 @@ function pdvAplicarCupom() {
 }
 
 async function pdvFinalizarVenda() {
+
   if (!pdvCarrinho.length) {
     toast("Adicione ao menos um veículo para fechar a venda.", "err");
     return;
@@ -1220,15 +1404,20 @@ async function pdvFinalizarVenda() {
   const desconto = pdvCalcularDesconto(subtotal);
   const totalOriginal = subtotal - desconto;
   const pagamentos = pdvCalcularPagamentos(totalOriginal);
+
   const cliente = document.getElementById("pdv-cliente")?.value.trim();
   const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
 
-  if (pagamentos.length > 1 && (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)) {
+  if (
+    pagamentos.length > 1 &&
+    (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)
+  ) {
     toast("Informe um valor válido para a 2ª forma de pagamento.", "err");
     return;
   }
 
   const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
+
   if (possuiAPrazo && !cliente) {
     toast("Informe o nome do cliente para venda a prazo.", "err");
     return;
@@ -1238,15 +1427,32 @@ async function pdvFinalizarVenda() {
   let totalFinalVenda = totalOriginal;
 
   if (possuiAPrazo) {
-    const valorBaseAPrazo = pdvCalcularValorAPrazo(totalOriginal, pagamentos);
-    const acrescimoPct = parseFloat(document.getElementById("pdv-porcentagem-acrescimo")?.value) || 0;
-    const qtdParcelas = parseInt(document.getElementById("pdv-qtd-parcelas")?.value) || 1;
 
-    const valorJuros = valorBaseAPrazo * (acrescimoPct / 100);
-    const valorTotalPrazoComJuros = valorBaseAPrazo + valorJuros;
-    const valorParcela = valorTotalPrazoComJuros / qtdParcelas;
+    const valorBaseAPrazo =
+      pdvCalcularValorAPrazo(totalOriginal, pagamentos);
 
-    totalFinalVenda = (totalOriginal - valorBaseAPrazo) + valorTotalPrazoComJuros;
+    const acrescimoPct =
+      parseFloat(
+        document.getElementById("pdv-porcentagem-acrescimo")?.value
+      ) || 0;
+
+    const qtdParcelas =
+      parseInt(
+        document.getElementById("pdv-qtd-parcelas")?.value
+      ) || 1;
+
+    const valorJuros =
+      valorBaseAPrazo * (acrescimoPct / 100);
+
+    const valorTotalPrazoComJuros =
+      valorBaseAPrazo + valorJuros;
+
+    const valorParcela =
+      valorTotalPrazoComJuros / qtdParcelas;
+
+    totalFinalVenda =
+      (totalOriginal - valorBaseAPrazo) +
+      valorTotalPrazoComJuros;
 
     dadosPrazo = {
       valorBase: valorBaseAPrazo,
@@ -1259,47 +1465,126 @@ async function pdvFinalizarVenda() {
   }
 
   const venda = {
-    itens: pdvCarrinho.map(i => ({ nome: i.nome, preco: i.preco, qtd: i.qtd })),
+
+    itens: pdvCarrinho.map(i => ({
+      docId: i.docId,
+      nome: i.nome,
+      preco: i.preco,
+      qtd: i.qtd
+    })),
+
     subtotal,
     desconto,
     total: totalFinalVenda,
+
     pagamentos,
-    pagamento: pagamentos.map(p => PAG_LABEL[p.forma] || p.forma).join(" + "),
+
+    pagamento:
+      pagamentos
+        .map(p => PAG_LABEL[p.forma] || p.forma)
+        .join(" + "),
+
     cliente: cliente || null,
     telefone,
+
     prazoDetalhes: dadosPrazo,
-    cupom: pdvCupomAplicado ? pdvCupomAplicado.codigo : null,
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+
+    cupom:
+      pdvCupomAplicado
+        ? pdvCupomAplicado.codigo
+        : null,
+
+    criadoEm:
+      firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
-    const refDoc = await db.collection("vendas").add(venda);
 
+    // 1. Salva a venda
+    const refDoc =
+      await db.collection("vendas").add(venda);
+
+    // 2. MARCA OS VEÍCULOS COMO VENDIDOS
+    for (const item of pdvCarrinho) {
+
+      if (!item.docId) {
+        console.warn("Veículo sem docId:", item);
+        continue;
+      }
+
+      console.log("Marcando veículo como vendido:", item.docId);
+
+      await db
+        .collection("produtos")
+        .doc(item.docId)
+        .update({
+          ativo: false,
+          status: "Vendido",
+          vendidoEm:
+            firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    // 3. Cria conta a receber se for venda a prazo
     if (possuiAPrazo && dadosPrazo) {
+
       await db.collection("contasAReceber").add({
+
         vendaId: refDoc.id,
         pedidoId: refDoc.id,
-        cliente: cliente,
+
+        cliente,
         telefoneCliente: telefone || null,
-        valorOriginal: dadosPrazo.valorTotalPrazoComJuros,
-        totalAReceber: dadosPrazo.valorTotalPrazoComJuros,
+
+        valorOriginal:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        totalAReceber:
+          dadosPrazo.valorTotalPrazoComJuros,
+
         totalPago: 0,
-        saldoRestante: dadosPrazo.valorTotalPrazoComJuros,
-        qtdParcelas: dadosPrazo.qtdParcelas,
-        valorParcela: dadosPrazo.valorParcela,
+
+        saldoRestante:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        qtdParcelas:
+          dadosPrazo.qtdParcelas,
+
+        valorParcela:
+          dadosPrazo.valorParcela,
+
         statusVenda: "em_aberto",
-        descricao: `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
-        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+
+        descricao:
+          `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
+
+        criadoEm:
+          firebase.firestore.FieldValue.serverTimestamp()
       });
     }
 
     toast("Venda finalizada com sucesso!", "ok");
+
     pdvLimparCarrinho();
+
+    await carregarProdutos();
     await carregarVendasHoje();
     await carregarContasAReceber();
+
     atualizarDashboard();
+    renderPdvGrid();
+
   } catch (e) {
-    toast("Erro ao finalizar venda: " + e.message, "err");
+
+    console.error(
+      "Erro ao finalizar venda:",
+      e
+    );
+
+    toast(
+      "Erro ao finalizar venda: " + e.message,
+      "err"
+    );
   }
 }
 

@@ -305,9 +305,9 @@ function atualizarStats() {
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
   if (elTopCount) {
-  elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
-  elTopCount.setAttribute("data-count", todosProdutos.length);
-}
+    elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
+    elTopCount.setAttribute("data-count", todosProdutos.length);
+  }
 }
 
 function filtrar() {
@@ -1109,6 +1109,189 @@ function pdvCalcularValorAPrazo(total, pagamentos) {
   return total;
 }
 
+async function pdvFinalizarVenda() {
+
+  if (!pdvCarrinho.length) {
+    toast("Adicione ao menos um veículo para fechar a venda.", "err");
+    return;
+  }
+
+  const subtotal = pdvCalcularSubtotal();
+  const desconto = pdvCalcularDesconto(subtotal);
+  const totalOriginal = subtotal - desconto;
+  const pagamentos = pdvCalcularPagamentos(totalOriginal);
+
+  const cliente = document.getElementById("pdv-cliente")?.value.trim();
+  const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
+
+  if (
+    pagamentos.length > 1 &&
+    (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)
+  ) {
+    toast("Informe um valor válido para a 2ª forma de pagamento.", "err");
+    return;
+  }
+
+  const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
+
+  if (possuiAPrazo && !cliente) {
+    toast("Informe o nome do cliente para venda a prazo.", "err");
+    return;
+  }
+
+  let dadosPrazo = null;
+  let totalFinalVenda = totalOriginal;
+
+  if (possuiAPrazo) {
+
+    const valorBaseAPrazo = pdvCalcularValorAPrazo(
+      totalOriginal,
+      pagamentos
+    );
+
+    const acrescimoPct =
+      parseFloat(
+        document.getElementById("pdv-porcentagem-acrescimo")?.value
+      ) || 0;
+
+    const qtdParcelas =
+      parseInt(
+        document.getElementById("pdv-qtd-parcelas")?.value
+      ) || 1;
+
+    const valorJuros =
+      valorBaseAPrazo * (acrescimoPct / 100);
+
+    const valorTotalPrazoComJuros =
+      valorBaseAPrazo + valorJuros;
+
+    const valorParcela =
+      valorTotalPrazoComJuros / qtdParcelas;
+
+    totalFinalVenda =
+      (totalOriginal - valorBaseAPrazo) +
+      valorTotalPrazoComJuros;
+
+    dadosPrazo = {
+      valorBase: valorBaseAPrazo,
+      acrescimoPct,
+      valorJuros,
+      valorTotalPrazoComJuros,
+      qtdParcelas,
+      valorParcela
+    };
+  }
+
+  const venda = {
+    itens: pdvCarrinho.map(i => ({
+      docId: i.docId,
+      nome: i.nome,
+      preco: i.preco,
+      qtd: i.qtd
+    })),
+
+    subtotal,
+    desconto,
+    total: totalFinalVenda,
+
+    pagamentos,
+
+    pagamento: pagamentos
+      .map(p => PAG_LABEL[p.forma] || p.forma)
+      .join(" + "),
+
+    cliente: cliente || null,
+    telefone,
+
+    prazoDetalhes: dadosPrazo,
+
+    cupom: pdvCupomAplicado
+      ? pdvCupomAplicado.codigo
+      : null,
+
+    criadoEm:
+      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+
+    const refDoc =
+      await db.collection("vendas").add(venda);
+
+    if (possuiAPrazo && dadosPrazo) {
+
+      await db.collection("contasAReceber").add({
+
+        vendaId: refDoc.id,
+        pedidoId: refDoc.id,
+
+        cliente: cliente,
+        telefoneCliente: telefone || null,
+
+        valorOriginal:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        totalAReceber:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        totalPago: 0,
+
+        saldoRestante:
+          dadosPrazo.valorTotalPrazoComJuros,
+
+        qtdParcelas:
+          dadosPrazo.qtdParcelas,
+
+        valorParcela:
+          dadosPrazo.valorParcela,
+
+        statusVenda: "em_aberto",
+
+        descricao:
+          `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
+
+        criadoEm:
+          firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Marca os veículos vendidos como inativos
+    const batch = db.batch();
+
+    pdvCarrinho.forEach(item => {
+
+      const produtoRef =
+        db.collection("produtos").doc(item.docId);
+
+      batch.update(produtoRef, {
+        ativo: false
+      });
+
+    });
+
+    await batch.commit();
+
+    toast("Venda finalizada com sucesso!", "ok");
+
+    pdvLimparCarrinho();
+
+    await carregarProdutos();
+    await carregarVendasHoje();
+    await carregarContasAReceber();
+
+    atualizarDashboard();
+
+  } catch (e) {
+
+    console.error("Erro ao finalizar venda:", e);
+
+    toast(
+      "Erro ao finalizar venda: " + e.message,
+      "err"
+    );
+  }
+}
+
 function calcularSimulacaoParcelas() {
   const subtotal = pdvCalcularSubtotal();
   const desconto = pdvCalcularDesconto(subtotal);
@@ -1210,97 +1393,97 @@ function pdvAplicarCupom() {
   renderPdvCart();
 }
 
-async function pdvFinalizarVenda() {
-  if (!pdvCarrinho.length) {
-    toast("Adicione ao menos um veículo para fechar a venda.", "err");
-    return;
-  }
-
-  const subtotal = pdvCalcularSubtotal();
-  const desconto = pdvCalcularDesconto(subtotal);
-  const totalOriginal = subtotal - desconto;
-  const pagamentos = pdvCalcularPagamentos(totalOriginal);
-  const cliente = document.getElementById("pdv-cliente")?.value.trim();
-  const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
-
-  if (pagamentos.length > 1 && (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)) {
-    toast("Informe um valor válido para a 2ª forma de pagamento.", "err");
-    return;
-  }
-
-  const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
-  if (possuiAPrazo && !cliente) {
-    toast("Informe o nome do cliente para venda a prazo.", "err");
-    return;
-  }
-
-  let dadosPrazo = null;
-  let totalFinalVenda = totalOriginal;
-
-  if (possuiAPrazo) {
-    const valorBaseAPrazo = pdvCalcularValorAPrazo(totalOriginal, pagamentos);
-    const acrescimoPct = parseFloat(document.getElementById("pdv-porcentagem-acrescimo")?.value) || 0;
-    const qtdParcelas = parseInt(document.getElementById("pdv-qtd-parcelas")?.value) || 1;
-
-    const valorJuros = valorBaseAPrazo * (acrescimoPct / 100);
-    const valorTotalPrazoComJuros = valorBaseAPrazo + valorJuros;
-    const valorParcela = valorTotalPrazoComJuros / qtdParcelas;
-
-    totalFinalVenda = (totalOriginal - valorBaseAPrazo) + valorTotalPrazoComJuros;
-
-    dadosPrazo = {
-      valorBase: valorBaseAPrazo,
-      acrescimoPct,
-      valorJuros,
-      valorTotalPrazoComJuros,
-      qtdParcelas,
-      valorParcela
-    };
-  }
-
-  const venda = {
-    itens: pdvCarrinho.map(i => ({ nome: i.nome, preco: i.preco, qtd: i.qtd })),
-    subtotal,
-    desconto,
-    total: totalFinalVenda,
-    pagamentos,
-    pagamento: pagamentos.map(p => PAG_LABEL[p.forma] || p.forma).join(" + "),
-    cliente: cliente || null,
-    telefone,
-    prazoDetalhes: dadosPrazo,
-    cupom: pdvCupomAplicado ? pdvCupomAplicado.codigo : null,
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
+async function carregarVendasHoje() {
   try {
-    const refDoc = await db.collection("vendas").add(venda);
-
-    if (possuiAPrazo && dadosPrazo) {
-      await db.collection("contasAReceber").add({
-        vendaId: refDoc.id,
-        pedidoId: refDoc.id,
-        cliente: cliente,
-        telefoneCliente: telefone || null,
-        valorOriginal: dadosPrazo.valorTotalPrazoComJuros,
-        totalAReceber: dadosPrazo.valorTotalPrazoComJuros,
-        totalPago: 0,
-        saldoRestante: dadosPrazo.valorTotalPrazoComJuros,
-        qtdParcelas: dadosPrazo.qtdParcelas,
-        valorParcela: dadosPrazo.valorParcela,
-        statusVenda: "em_aberto",
-        descricao: `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
-        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    toast("Venda finalizada com sucesso!", "ok");
-    pdvLimparCarrinho();
-    await carregarVendasHoje();
-    await carregarContasAReceber();
-    atualizarDashboard();
+    const inicioHoje = new Date();
+    inicioHoje.setHours(0, 0, 0, 0);
+    const snap = await db.collection("vendas")
+      .where("criadoEm", ">=", inicioHoje)
+      .orderBy("criadoEm", "desc")
+      .get();
+    vendasHoje = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderVendasHoje();
   } catch (e) {
-    toast("Erro ao finalizar venda: " + e.message, "err");
+    const el = document.getElementById("pdv-vendas-tabela");
+    if (el) {
+      el.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Erro ao carregar vendas: ${e.message}</p></div></td></tr>`;
+    }
   }
+}
+
+function linhaVenda(v, origem, comData) {
+  const dt = v.criadoEm?.toDate ? v.criadoEm.toDate() : null;
+  const hora = dt ? dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '–';
+  const data = dt ? dt.toLocaleDateString('pt-BR') : '–';
+  const itensResumo = (v.itens || []).map(i => `${i.qtd}x ${i.nome}`).join(", ");
+
+  const pagamentoTexto = Array.isArray(v.pagamentos)
+    ? v.pagamentos.map(p => `${PAG_LABEL[p.forma] || p.forma} (${formatarMoeda(p.valor)})`).join(" + ")
+    : (PAG_LABEL[v.pagamento] || v.pagamento || '–');
+
+  return `
+  <tr>
+    ${comData ? `<td>${data}</td>` : ''}
+    <td>${hora}</td>
+    <td><strong>${v.cliente || 'Consumidor'}</strong>${v.telefone ? `<br><small style="color:var(--text-muted);">${v.telefone}</small>` : ''}</td>
+    <td style="max-width:240px"><span style="font-size:0.84rem;color:var(--text-muted)">${itensResumo}</span></td>
+    <td><span class="badge" style="background:#f1f5f9;color:#334155;">${pagamentoTexto}</span></td>
+    <td style="font-weight:800;color:var(--text-main);">${formatarMoeda(v.total)}</td>
+    <td>
+      <button class="btn btn-danger btn-sm" onclick="confirmarExclusaoVenda('${v.docId}','${origem}')" title="Excluir venda">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </td>
+  </tr>`;
+}
+
+function renderVendasHoje() {
+  const tbody = document.getElementById("pdv-vendas-tabela");
+  const elQtd = document.getElementById("pdv-stat-qtd");
+  const elTotal = document.getElementById("pdv-stat-total");
+
+  if (elQtd) elQtd.textContent = vendasHoje.length;
+  const total = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
+  if (elTotal) elTotal.textContent = formatarMoeda(total);
+
+  if (!tbody) return;
+  if (!vendasHoje.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Nenhuma venda registrada hoje.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = vendasHoje.map(v => linhaVenda(v, "pdv", false)).join("");
+}
+
+function confirmarExclusaoVenda(docId, origem) {
+  document.getElementById("confirm-msg").textContent = "Excluir esta venda e as parcelas vinculadas no Contas a Receber? Esta ação não pode ser desfeita.";
+  document.getElementById("confirm-ok-btn").onclick = async () => {
+    try {
+      const [snapVendaId, snapPedidoId] = await Promise.all([
+        db.collection("contasAReceber").where("vendaId", "==", docId).get(),
+        db.collection("contasAReceber").where("pedidoId", "==", docId).get()
+      ]);
+
+      const exclusoesContas = [];
+      snapVendaId.docs.forEach(doc => exclusoesContas.push(db.collection("contasAReceber").doc(doc.id).delete()));
+      snapPedidoId.docs.forEach(doc => exclusoesContas.push(db.collection("contasAReceber").doc(doc.id).delete()));
+      await Promise.all(exclusoesContas);
+
+      await db.collection("vendas").doc(docId).delete();
+
+      toast("Venda excluída com sucesso!", "ok");
+      fecharModal("confirm-modal");
+
+      await Promise.all([
+        carregarVendasHoje(),
+        carregarRelatorio(),
+        carregarContasAReceber()
+      ]);
+      atualizarDashboard();
+    } catch (e) {
+      toast("Erro ao excluir venda: " + e.message, "err");
+    }
+  };
+  abrirModal("confirm-modal");
 }
 
 async function carregarVendasHoje() {
