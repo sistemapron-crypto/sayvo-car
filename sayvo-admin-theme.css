@@ -79,7 +79,7 @@ body {
   letter-spacing: 1px;
   text-transform: uppercase;
   color: #cbd5e1;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   padding: 4px 10px;
   border-radius: 999px;
   margin-top: 8px;
@@ -92,7 +92,7 @@ body {
   padding: 36px 32px;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -502,7 +502,8 @@ aside#main-sidebar {
   gap: 12px;
 }
 
-.section-header h1, .section-header h2 {
+.section-header h1,
+.section-header h2 {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -1027,7 +1028,7 @@ tr:hover td {
 
 /* Campo de Busca do PDV */
 input#pdv-busca,
-div#app > div.app-body > main.content > div#tab-pdv input#pdv-busca {
+div#app>div.app-body>main.content>div#tab-pdv input#pdv-busca {
   width: 100%;
   min-height: 48px;
   height: 48px;
@@ -1281,8 +1282,13 @@ input#pdv-busca:focus {
   background: var(--accent);
 }
 
-.cr-metric-card.pendente::before { background: var(--danger); }
-.cr-metric-card.quitado::before { background: var(--success); }
+.cr-metric-card.pendente::before {
+  background: var(--danger);
+}
+
+.cr-metric-card.quitado::before {
+  background: var(--success);
+}
 
 .cr-metric-label {
   font-size: 0.78rem;
@@ -1408,8 +1414,13 @@ input#pdv-busca:focus {
   font-weight: 700;
 }
 
-.conta-summary strong.valor-pago { color: var(--success); }
-.conta-summary strong.valor-restante { color: var(--danger); }
+.conta-summary strong.valor-pago {
+  color: var(--success);
+}
+
+.conta-summary strong.valor-restante {
+  color: var(--danger);
+}
 
 .conta-actions {
   display: flex;
@@ -1556,8 +1567,13 @@ input#pdv-busca:focus {
   opacity: 1;
 }
 
-#toast.ok { border-left: 4px solid var(--accent); }
-#toast.err { border-left: 4px solid var(--danger); }
+#toast.ok {
+  border-left: 4px solid var(--accent);
+}
+
+#toast.err {
+  border-left: 4px solid var(--danger);
+}
 
 .empty-state {
   text-align: center;
@@ -1584,7 +1600,9 @@ input#pdv-busca:focus {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── CONTROLES MOBILE INICIAIS (DESKTOP HIDDEN) ── */
@@ -1601,7 +1619,8 @@ input#pdv-busca:focus {
 }
 
 /* ── PREVENÇÃO GERAL DE SCROLL HORIZONTAL SEM QUEBRAR STICKY SIDEBAR ── */
-html, body {
+html,
+body {
   overflow-x: clip;
   max-width: 100vw;
   width: 100%;
@@ -1625,7 +1644,7 @@ html, body {
 }
 
 /* Regra prioritária para o aside ir até o final do site mesmo sem novos ícones */
-div#app > div.app-body > aside#main-sidebar,
+div#app>div.app-body>aside#main-sidebar,
 aside#main-sidebar {
   min-height: calc(100vh - 64px);
   height: calc(100vh - 64px);
@@ -1639,6 +1658,7 @@ aside#main-sidebar {
   .pdv-layout {
     grid-template-columns: 1fr;
   }
+
   .pdv-cart {
     position: static;
     max-height: none;
@@ -1646,6 +1666,7 @@ aside#main-sidebar {
 }
 
 @media (max-width: 900px) {
+
   /* 1. HEADER / TOPBAR */
   .topbar {
     padding: 0 12px;
@@ -1686,6 +1707,15 @@ aside#main-sidebar {
   .topbar-brand {
     font-size: 1.05rem;
     gap: 8px;
+    min-width: 0;
+  }
+
+  .topbar-brand img {
+    height: 38px !important;
+    width: auto;
+    max-width: 125px;
+    object-fit: contain;
+    display: block;
   }
 
   .topbar-brand i {
@@ -1701,12 +1731,21 @@ aside#main-sidebar {
   }
 
   .topbar-badge {
-    padding: 4px 8px;
-    font-size: 0.74rem;
-    max-width: 135px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 4px 7px;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .topbar-badge span {
+    font-size: 0;
+  }
+
+  .topbar-badge span::after {
+    content: attr(data-count);
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
   .logout-btn {
@@ -1783,6 +1822,14 @@ aside#main-sidebar {
     color: #fff;
     font-weight: 800;
     font-size: 1.05rem;
+  }
+
+  .mobile-sidebar-brand img {
+    height: 38px;
+    width: auto;
+    max-width: 145px;
+    object-fit: contain;
+    display: block;
   }
 
   .mobile-sidebar-close {
@@ -1887,7 +1934,7 @@ aside#main-sidebar {
     margin-bottom: 18px;
   }
 
-  .section-header > div:first-child {
+  .section-header>div:first-child {
     width: 100%;
   }
 
@@ -1902,8 +1949,8 @@ aside#main-sidebar {
     line-height: 1.4;
   }
 
-  .section-header > div:last-child,
-  .section-header > button {
+  .section-header>div:last-child,
+  .section-header>button {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
@@ -2338,7 +2385,7 @@ aside#main-sidebar {
 }
 
 /* ── ENQUADRAMENTO GARANTIDO DOS CAMPOS DE CONFIGURAÇÕES ── */
-#tab-config .config-card:nth-of-type(3) div[style*="grid-template-columns"] > div:nth-of-type(2) label {
+#tab-config .config-card:nth-of-type(3) div[style*="grid-template-columns"]>div:nth-of-type(2) label {
   display: block;
   width: 100%;
   max-width: 100%;

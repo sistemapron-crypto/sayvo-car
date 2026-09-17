@@ -304,7 +304,10 @@ function atualizarStats() {
   if (elAtivos) elAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
-  if (elTopCount) elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
+  if (elTopCount) {
+  elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
+  elTopCount.setAttribute("data-count", todosProdutos.length);
+}
 }
 
 function filtrar() {

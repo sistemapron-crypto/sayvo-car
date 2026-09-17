@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SAYVO Auto Admin – Painel de Gestão de Veículos</title>
-  <link rel="icon" type="image/jpeg" href="./admin/ícone-sayvoauto.jpg">
-<link rel="apple-touch-icon" sizes="180x180" href="./admin/ícone-sayvoauto.jpg">
+  <link rel="icon" type="image/jpeg" href="./public/admin/ícone-sayvoauto.jpg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./public/admin/ícone-sayvoauto.jpg">
   <meta name="description"
     content="Painel profissional de gestão para revenda de veículos SAYVO com controle de estoque, vendas, financeiro e configurações integradas ao Firebase." />
   <meta property="og:title" content="SAYVO Auto Admin – Painel de Gestão de Veículos" />
@@ -28,10 +28,15 @@
   <div id="login-screen">
     <div class="login-brand">
       <div class="login-brand-logo">
-        <i class="fa-solid fa-car-rear" style="color:var(--accent);"></i>
-        <span>SAYVO<span class="accent">.AUTO</span></span>
+        <img src="./public/admin/sayvo-auto-logo1.png" alt="SAYVO AUTO"
+          style="height: 95px; width: auto; object-fit: contain;">
       </div>
-      <span class="login-badge">Painel de Gestão da Revenda</span>
+
+      <span class="login-badge" style="
+    border: 1px solid var(--accent);
+    border-radius: 6px;">
+        Sayvo - Painel de Gestão da Revenda
+      </span>
     </div>
 
     <div class="login-box">
@@ -61,7 +66,8 @@
 
         <div class="topbar-brand">
           <div style="display:flex; align-items:center;">
-            <img src="./admin/sayvo-auto.png" alt="SAYVO AUTO" style="height:52px; width:auto; object-fit:contain;">
+            <img src="./public/admin/sayvo-auto-logo.png" alt="SAYVO AUTO"
+              style="height:52px; width:auto; object-fit:contain;">
           </div>
 
           <span class="topbar-tag">SISTEMA</span>
@@ -71,7 +77,7 @@
       <div class="topbar-right">
         <div class="topbar-badge">
           <i class="fa-solid fa-warehouse"></i>
-          <span id="topbar-count">Carregando estoque...</span>
+          <span id="topbar-count" class="mobile-stock-count">Carregando estoque...</span>
         </div>
         <button class="logout-btn" onclick="fazerLogout()" title="Sair do sistema">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
@@ -85,8 +91,7 @@
         <!-- CABEÇALHO DO MENU MOBILE -->
         <div class="mobile-sidebar-header">
           <div class="mobile-sidebar-brand">
-            <i class="fa-solid fa-car" style="color:var(--accent);"></i>
-            <span>SAYVO<span style="color:var(--accent);">AUTO</span></span>
+            <img src="./public/admin/sayvo-auto-logo.png" alt="SAYVO AUTO">
           </div>
           <button class="mobile-sidebar-close" onclick="fecharMobileSidebar()" aria-label="Fechar Menu">
             <i class="fa-solid fa-xmark"></i>
