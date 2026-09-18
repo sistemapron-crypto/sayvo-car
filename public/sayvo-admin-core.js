@@ -234,7 +234,10 @@ function atualizarDashboard() {
   const elVendasHojeTotal = document.getElementById("dash-vendas-hoje-total");
   const elFinanceiroPendente = document.getElementById("dash-financeiro-pendente");
 
-  if (elEstoqueTotal) elEstoqueTotal.textContent = todosProdutos.length;
+  if (elEstoqueTotal) {
+    elEstoqueTotal.textContent =
+      todosProdutos.filter(p => p.ativo !== false && p.vendido !== true).length;
+  }
   if (elEstoqueAtivos) elEstoqueAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elEstoqueDestaques) elEstoqueDestaques.textContent = todosProdutos.filter(p => p.destaque).length;
 
@@ -254,7 +257,9 @@ function atualizarDashboard() {
   // Recent vehicles mini table in dashboard
   const recentTable = document.getElementById("dash-recent-vehicles");
   if (recentTable) {
-    const recents = [...todosProdutos].slice(0, 5);
+    const recents = todosProdutos
+      .filter(p => p.ativo !== false && p.vendido !== true)
+      .slice(0, 5);
     if (!recents.length) {
       recentTable.innerHTML = `<tr><td colspan="4" class="empty-state"><p>Nenhum veículo em estoque.</p></td></tr>`;
     } else {
@@ -300,13 +305,16 @@ function atualizarStats() {
   const elCats = document.getElementById("stat-cats");
   const elTopCount = document.getElementById("topbar-count");
 
-  if (elTotal) elTotal.textContent = todosProdutos.length;
+  const totalPatio = todosProdutos.filter(p => p.ativo !== false).length;
+
+  if (elTotal) elTotal.textContent = totalPatio;
   if (elAtivos) elAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
+
   if (elTopCount) {
-    elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
-    elTopCount.setAttribute("data-count", todosProdutos.length);
+    elTopCount.textContent = `${totalPatio} veículos em estoque`;
+    elTopCount.setAttribute("data-count", totalPatio);
   }
 }
 
@@ -326,9 +334,21 @@ function filtrar() {
     );
   }
   if (cat) lista = lista.filter(p => (p.categoria || "") === cat);
-  if (status === "ativo") lista = lista.filter(p => p.ativo !== false);
-  if (status === "inativo") lista = lista.filter(p => p.ativo === false);
-  if (status === "destaque") lista = lista.filter(p => p.destaque);
+  if (status === "ativo") {
+    lista = lista.filter(p => p.ativo !== false && p.vendido !== true);
+  }
+
+  if (status === "inativo") {
+    lista = lista.filter(p => p.ativo === false && p.vendido !== true);
+  }
+
+  if (status === "vendido") {
+    lista = lista.filter(p => p.vendido === true);
+  }
+
+  if (status === "destaque") {
+    lista = lista.filter(p => p.destaque && p.vendido !== true);
+  }
   mostrarTabela(lista);
 }
 
@@ -366,7 +386,11 @@ function mostrarTabela(lista) {
       </td>
       <td style="font-weight:800;color:var(--text-main);font-size:1rem;">${formatarMoeda(p.preco)}</td>
       <td>
-        ${p.ativo !== false ? '<span class="badge badge-ativo"><i class="fa-solid fa-check"></i> Ativo</span>' : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'}
+        ${p.vendido === true
+        ? '<span class="badge badge-inativo"><i class="fa-solid fa-check-double"></i> Vendido</span>'
+        : p.ativo !== false
+          ? '<span class="badge badge-ativo"><i class="fa-solid fa-check"></i> Ativo</span>'
+          : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'}
         ${p.destaque ? ' <span class="badge badge-destaque"><i class="fa-solid fa-star"></i> Destaque</span>' : ''}
       </td>
       <td>
@@ -649,8 +673,14 @@ async function salvarProduto() {
     km,
     cambio,
     combustivel,
-    cor
+    cor,
+
+    // Ao reativar um veículo vendido, ele volta a ficar disponível
+    vendido: ativo ? false : (docId
+      ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))?.vendido === true
+      : false)
   };
+
 
   try {
     if (docId) {
@@ -1255,7 +1285,7 @@ async function pdvFinalizarVenda() {
       });
     }
 
-    // Marca os veículos vendidos como inativos
+    // Marca os veículos vendidos como inativos e vendidos
     const batch = db.batch();
 
     pdvCarrinho.forEach(item => {
@@ -1264,7 +1294,8 @@ async function pdvFinalizarVenda() {
         db.collection("produtos").doc(item.docId);
 
       batch.update(produtoRef, {
-        ativo: false
+        ativo: false,
+        vendido: true
       });
 
     });

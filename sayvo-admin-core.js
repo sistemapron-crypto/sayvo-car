@@ -234,16 +234,21 @@ function atualizarDashboard() {
   const elVendasHojeTotal = document.getElementById("dash-vendas-hoje-total");
   const elFinanceiroPendente = document.getElementById("dash-financeiro-pendente");
 
-  if (elEstoqueTotal) elEstoqueTotal.textContent = todosProdutos.length;
+  if (elEstoqueTotal) {
+    elEstoqueTotal.textContent =
+      todosProdutos.filter(p => p.ativo !== false && p.vendido !== true).length;
+  }
   if (elEstoqueAtivos) elEstoqueAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elEstoqueDestaques) elEstoqueDestaques.textContent = todosProdutos.filter(p => p.destaque).length;
 
-  if (elVendasHojeQtd) elVendasHojeQtd.textContent = vendasHoje.length;
-  const totalHoje = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasHojeValidas = vendasHoje.filter(v => v.status !== "cancelada");
+  if (elVendasHojeQtd) elVendasHojeQtd.textContent = vendasHojeValidas.length;
+  const totalHoje = vendasHojeValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   if (elVendasHojeTotal) elVendasHojeTotal.textContent = formatarMoeda(totalHoje);
 
   let totalPendente = 0;
   todasContasAReceber.forEach(conta => {
+    if (conta.status === "cancelada" || conta.statusVenda === "cancelada") return;
     const orig = conta.valorOriginal || conta.totalAReceber || 0;
     const pago = conta.totalPago || 0;
     const rest = conta.saldoRestante !== undefined ? conta.saldoRestante : (orig - pago);
@@ -254,7 +259,9 @@ function atualizarDashboard() {
   // Recent vehicles mini table in dashboard
   const recentTable = document.getElementById("dash-recent-vehicles");
   if (recentTable) {
-    const recents = [...todosProdutos].slice(0, 5);
+    const recents = todosProdutos
+      .filter(p => p.ativo !== false && p.vendido !== true)
+      .slice(0, 5);
     if (!recents.length) {
       recentTable.innerHTML = `<tr><td colspan="4" class="empty-state"><p>Nenhum veículo em estoque.</p></td></tr>`;
     } else {
@@ -305,8 +312,12 @@ function atualizarStats() {
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
   if (elTopCount) {
-    elTopCount.textContent = `${todosProdutos.length} veículos em estoque`;
-    elTopCount.setAttribute("data-count", todosProdutos.length);
+    const totalPatio = todosProdutos.filter(
+      p => p.ativo !== false && p.vendido !== true
+    ).length;
+
+    elTopCount.textContent = `${totalPatio} veículos em estoque`;
+    elTopCount.setAttribute("data-count", totalPatio);
   }
 }
 
@@ -326,9 +337,21 @@ function filtrar() {
     );
   }
   if (cat) lista = lista.filter(p => (p.categoria || "") === cat);
-  if (status === "ativo") lista = lista.filter(p => p.ativo !== false);
-  if (status === "inativo") lista = lista.filter(p => p.ativo === false);
-  if (status === "destaque") lista = lista.filter(p => p.destaque);
+  if (status === "ativo") {
+    lista = lista.filter(p => p.ativo !== false && p.vendido !== true);
+  }
+
+  if (status === "inativo") {
+    lista = lista.filter(p => p.ativo === false && p.vendido !== true);
+  }
+
+  if (status === "vendido") {
+    lista = lista.filter(p => p.vendido === true);
+  }
+
+  if (status === "destaque") {
+    lista = lista.filter(p => p.destaque && p.vendido !== true);
+  }
   mostrarTabela(lista);
 }
 
@@ -366,7 +389,12 @@ function mostrarTabela(lista) {
       </td>
       <td style="font-weight:800;color:var(--text-main);font-size:1rem;">${formatarMoeda(p.preco)}</td>
       <td>
-        ${p.ativo !== false ? '<span class="badge badge-ativo"><i class="fa-solid fa-check"></i> Ativo</span>' : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'}
+        ${p.vendido === true
+        ? '<span class="badge badge-inativo"><i class="fa-solid fa-check-double"></i> Vendido</span>'
+        : p.ativo !== false
+          ? '<span class="badge badge-ativo"><i class="fa-solid fa-check"></i> Ativo</span>'
+          : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'
+      }
         ${p.destaque ? ' <span class="badge badge-destaque"><i class="fa-solid fa-star"></i> Destaque</span>' : ''}
       </td>
       <td>
@@ -588,6 +616,83 @@ function abrirModalEditar(docId) {
   abrirModal("modal-produto");
 }
 
+async function cancelarVendaRelacionadaAoVeiculo(docId) {
+  const snap = await db.collection("vendas")
+    .orderBy("criadoEm", "desc")
+    .get();
+
+  const vendas = snap.docs
+    .map(d => ({ docId: d.id, ...d.data() }))
+    .filter(v =>
+      v.status !== "cancelada" &&
+      Array.isArray(v.itens) &&
+      v.itens.some(i => String(i.docId) === String(docId))
+    );
+
+  const venda = vendas[0];
+  if (!venda) return null;
+
+  const agora = firebase.firestore.FieldValue.serverTimestamp();
+  await db.collection("vendas").doc(venda.docId).update({
+    status: "cancelada",
+    canceladaEm: agora,
+    motivoCancelamento: "Veículo reativado no estoque pelo administrador."
+  });
+
+  const contas = new Map();
+  const [porVenda, porPedido] = await Promise.all([
+    db.collection("contasAReceber").where("vendaId", "==", venda.docId).get(),
+    db.collection("contasAReceber").where("pedidoId", "==", venda.docId).get()
+  ]);
+
+  porVenda.docs.forEach(d => contas.set(d.id, d));
+  porPedido.docs.forEach(d => contas.set(d.id, d));
+
+  if (contas.size) {
+    const batch = db.batch();
+    contas.forEach(d => {
+      batch.update(db.collection("contasAReceber").doc(d.id), {
+        statusVenda: "cancelada",
+        status: "cancelada",
+        canceladaEm: agora
+      });
+    });
+    await batch.commit();
+  }
+
+  return venda;
+}
+
+async function finalizarReativacaoVeiculo(docId, dados) {
+  try {
+    const venda = await cancelarVendaRelacionadaAoVeiculo(docId);
+
+    const dadosReativacao = { ...dados, ativo: true, vendido: false };
+    await db.collection("produtos").doc(docId).update(dadosReativacao);
+
+    fecharModal("confirm-modal");
+    fecharModal("modal-produto");
+
+    toast(
+      venda
+        ? "Venda cancelada e veículo reativado no estoque."
+        : "Veículo reativado no estoque.",
+      "ok"
+    );
+
+    await Promise.all([
+      carregarProdutos(),
+      carregarVendasHoje(),
+      carregarRelatorio(),
+      carregarContasAReceber()
+    ]);
+    atualizarDashboard();
+  } catch (e) {
+    console.error("Erro ao cancelar venda/reativar veículo:", e);
+    toast("Erro ao reativar veículo: " + e.message, "err");
+  }
+}
+
 async function salvarProduto() {
   const docId = document.getElementById("form-id").value;
   let nome = document.getElementById("form-nome").value.trim();
@@ -633,24 +738,44 @@ async function salvarProduto() {
   const imagem = imagens[0] || "";
 
   const dados = {
-    nome,
-    categoria,
-    preco,
-    imagem,
-    imagens,
-    descricao,
-    ativo,
-    destaque,
-    marca,
-    modelo,
-    versao,
-    anoFabricacao,
-    anoModelo,
-    km,
-    cambio,
-    combustivel,
-    cor
-  };
+  nome,
+  categoria,
+  preco,
+  imagem,
+  imagens,
+  descricao,
+  ativo,
+  destaque,
+  marca,
+  modelo,
+  versao,
+  anoFabricacao,
+  anoModelo,
+  km,
+  cambio,
+  combustivel,
+  cor,
+
+  // Ao reativar um veículo vendido, ele volta a ficar disponível
+  vendido: ativo ? false : (docId
+    ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))?.vendido === true
+    : false)
+ };
+
+  const produtoAtual = docId
+    ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))
+    : null;
+
+  if (docId && ativo && produtoAtual?.vendido === true) {
+    document.getElementById("confirm-msg").textContent =
+      "Este veículo está marcado como vendido. Ao reativá-lo, a venda será cancelada no histórico e retirada dos totais. Deseja continuar?";
+
+    document.getElementById("confirm-ok-btn").onclick = () =>
+      finalizarReativacaoVeiculo(docId, dados);
+
+    abrirModal("confirm-modal");
+    return;
+  }
 
   try {
     if (docId) {
@@ -1255,7 +1380,7 @@ async function pdvFinalizarVenda() {
       });
     }
 
-    // Marca os veículos vendidos como inativos
+    // Marca os veículos vendidos como inativos e vendidos
     const batch = db.batch();
 
     pdvCarrinho.forEach(item => {
@@ -1264,7 +1389,8 @@ async function pdvFinalizarVenda() {
         db.collection("produtos").doc(item.docId);
 
       batch.update(produtoRef, {
-        ativo: false
+        ativo: false,
+        vendido: true
       });
 
     });
@@ -1308,16 +1434,33 @@ function calcularSimulacaoParcelas() {
 
   const resEl = document.getElementById("pdv-resumo-parcelamento");
   if (resEl) {
-    if (acrescimoPct > 0) {
-      resEl.innerHTML = `
-        <div>Valor a prazo original: ${formatarMoeda(valorBaseAPrazo)}</div>
-        <div>Com acréscimo (${acrescimoPct}%): ${formatarMoeda(valorTotalAPrazo)}</div>
-        <div style="font-size:1.1rem;color:var(--text-main);margin-top:4px;">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>
-      `;
-    } else {
-      resEl.innerHTML = `<div style="font-size:1.1rem;color:var(--text-main);">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>`;
-    }
-  }
+  resEl.style.display = "block";
+  resEl.style.visibility = "visible";
+  resEl.style.opacity = "1";
+  resEl.style.color = "#111827";
+  resEl.style.background = "#ffffff";
+  resEl.style.padding = "10px";
+  resEl.style.borderRadius = "8px";
+
+  resEl.innerHTML = `
+    <div style="font-size:14px;color:#111827;">
+      Valor a prazo: ${formatarMoeda(valorBaseAPrazo)}
+    </div>
+
+    <div style="font-size:14px;color:#111827;">
+      Total: ${formatarMoeda(valorTotalAPrazo)}
+    </div>
+
+    <div style="
+      font-size:18px;
+      font-weight:800;
+      color:#111827;
+      margin-top:6px;
+    ">
+      ${qtdParcelas}x de ${formatarMoeda(valorParcela)}
+    </div>
+  `;
+}
 }
 
 function renderPdvCart() {
@@ -1421,6 +1564,8 @@ function linhaVenda(v, origem, comData) {
     ? v.pagamentos.map(p => `${PAG_LABEL[p.forma] || p.forma} (${formatarMoeda(p.valor)})`).join(" + ")
     : (PAG_LABEL[v.pagamento] || v.pagamento || '–');
 
+  const cancelada = v.status === "cancelada";
+
   return `
   <tr>
     ${comData ? `<td>${data}</td>` : ''}
@@ -1428,7 +1573,10 @@ function linhaVenda(v, origem, comData) {
     <td><strong>${v.cliente || 'Consumidor'}</strong>${v.telefone ? `<br><small style="color:var(--text-muted);">${v.telefone}</small>` : ''}</td>
     <td style="max-width:240px"><span style="font-size:0.84rem;color:var(--text-muted)">${itensResumo}</span></td>
     <td><span class="badge" style="background:#f1f5f9;color:#334155;">${pagamentoTexto}</span></td>
-    <td style="font-weight:800;color:var(--text-main);">${formatarMoeda(v.total)}</td>
+    <td style="font-weight:800;color:${cancelada ? '#dc2626' : 'var(--text-main)'};">
+      ${formatarMoeda(v.total)}
+      ${cancelada ? `<br><span style="margin-top:5px;display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:#fee2e2;color:#dc2626;font-size:0.72rem;font-weight:800;"><i class="fa-solid fa-ban"></i> CANCELADA</span>` : ''}
+    </td>
     <td>
       <button class="btn btn-danger btn-sm" onclick="confirmarExclusaoVenda('${v.docId}','${origem}')" title="Excluir venda">
         <i class="fa-solid fa-trash"></i>
@@ -1442,8 +1590,9 @@ function renderVendasHoje() {
   const elQtd = document.getElementById("pdv-stat-qtd");
   const elTotal = document.getElementById("pdv-stat-total");
 
-  if (elQtd) elQtd.textContent = vendasHoje.length;
-  const total = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasValidas = vendasHoje.filter(v => v.status !== "cancelada");
+  if (elQtd) elQtd.textContent = vendasValidas.length;
+  const total = vendasValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   if (elTotal) elTotal.textContent = formatarMoeda(total);
 
   if (!tbody) return;
@@ -1504,81 +1653,6 @@ async function carregarVendasHoje() {
   }
 }
 
-function linhaVenda(v, origem, comData) {
-  const dt = v.criadoEm?.toDate ? v.criadoEm.toDate() : null;
-  const hora = dt ? dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '–';
-  const data = dt ? dt.toLocaleDateString('pt-BR') : '–';
-  const itensResumo = (v.itens || []).map(i => `${i.qtd}x ${i.nome}`).join(", ");
-
-  const pagamentoTexto = Array.isArray(v.pagamentos)
-    ? v.pagamentos.map(p => `${PAG_LABEL[p.forma] || p.forma} (${formatarMoeda(p.valor)})`).join(" + ")
-    : (PAG_LABEL[v.pagamento] || v.pagamento || '–');
-
-  return `
-  <tr>
-    ${comData ? `<td>${data}</td>` : ''}
-    <td>${hora}</td>
-    <td><strong>${v.cliente || 'Consumidor'}</strong>${v.telefone ? `<br><small style="color:var(--text-muted);">${v.telefone}</small>` : ''}</td>
-    <td style="max-width:240px"><span style="font-size:0.84rem;color:var(--text-muted)">${itensResumo}</span></td>
-    <td><span class="badge" style="background:#f1f5f9;color:#334155;">${pagamentoTexto}</span></td>
-    <td style="font-weight:800;color:var(--text-main);">${formatarMoeda(v.total)}</td>
-    <td>
-      <button class="btn btn-danger btn-sm" onclick="confirmarExclusaoVenda('${v.docId}','${origem}')" title="Excluir venda">
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    </td>
-  </tr>`;
-}
-
-function renderVendasHoje() {
-  const tbody = document.getElementById("pdv-vendas-tabela");
-  const elQtd = document.getElementById("pdv-stat-qtd");
-  const elTotal = document.getElementById("pdv-stat-total");
-
-  if (elQtd) elQtd.textContent = vendasHoje.length;
-  const total = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
-  if (elTotal) elTotal.textContent = formatarMoeda(total);
-
-  if (!tbody) return;
-  if (!vendasHoje.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Nenhuma venda registrada hoje.</p></div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML = vendasHoje.map(v => linhaVenda(v, "pdv", false)).join("");
-}
-
-function confirmarExclusaoVenda(docId, origem) {
-  document.getElementById("confirm-msg").textContent = "Excluir esta venda e as parcelas vinculadas no Contas a Receber? Esta ação não pode ser desfeita.";
-  document.getElementById("confirm-ok-btn").onclick = async () => {
-    try {
-      const [snapVendaId, snapPedidoId] = await Promise.all([
-        db.collection("contasAReceber").where("vendaId", "==", docId).get(),
-        db.collection("contasAReceber").where("pedidoId", "==", docId).get()
-      ]);
-
-      const exclusoesContas = [];
-      snapVendaId.docs.forEach(doc => exclusoesContas.push(db.collection("contasAReceber").doc(doc.id).delete()));
-      snapPedidoId.docs.forEach(doc => exclusoesContas.push(db.collection("contasAReceber").doc(doc.id).delete()));
-      await Promise.all(exclusoesContas);
-
-      await db.collection("vendas").doc(docId).delete();
-
-      toast("Venda excluída com sucesso!", "ok");
-      fecharModal("confirm-modal");
-
-      await Promise.all([
-        carregarVendasHoje(),
-        carregarRelatorio(),
-        carregarContasAReceber()
-      ]);
-      atualizarDashboard();
-    } catch (e) {
-      toast("Erro ao excluir venda: " + e.message, "err");
-    }
-  };
-  abrirModal("confirm-modal");
-}
-
 // ── RELATÓRIOS ───────────────────────────────────────────────────────────────
 async function carregarRelatorio() {
   try {
@@ -1604,14 +1678,15 @@ async function carregarRelatorio() {
 }
 
 function renderRelatorio() {
-  const totalMes = vendasRelatorio.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasValidas = vendasRelatorio.filter(v => v.status !== "cancelada");
+  const totalMes = vendasValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   const elQtd = document.getElementById("relatorio-stat-qtd");
   const elTotal = document.getElementById("relatorio-stat-total");
   const elTicket = document.getElementById("relatorio-stat-ticket");
 
-  if (elQtd) elQtd.textContent = vendasRelatorio.length;
+  if (elQtd) elQtd.textContent = vendasValidas.length;
   if (elTotal) elTotal.textContent = formatarMoeda(totalMes);
-  if (elTicket) elTicket.textContent = formatarMoeda(vendasRelatorio.length ? totalMes / vendasRelatorio.length : 0);
+  if (elTicket) elTicket.textContent = formatarMoeda(vendasValidas.length ? totalMes / vendasValidas.length : 0);
 
   const tbody = document.getElementById("relatorio-tabela");
   if (!tbody) return;
@@ -1728,8 +1803,9 @@ function renderizarContasAReceber() {
     const qtdParcelas = parseInt(conta.qtdParcelas) || 1;
 
     const pctPago = valOriginal > 0 ? Math.min(100, Math.round((totalPago / valOriginal) * 100)) : 0;
-    const statusBadgeClass = saldoRestante <= 0 ? 'quitada' : (totalPago > 0 ? 'parcial' : 'em-aberto');
-    const statusText = saldoRestante <= 0 ? 'Quitada' : (totalPago > 0 ? 'Parcial' : 'Em Aberto');
+    const cancelada = conta.status === 'cancelada' || conta.statusVenda === 'cancelada';
+    const statusBadgeClass = cancelada ? 'em-aberto' : (saldoRestante <= 0 ? 'quitada' : (totalPago > 0 ? 'parcial' : 'em-aberto'));
+    const statusText = cancelada ? 'Cancelada' : (saldoRestante <= 0 ? 'Quitada' : (totalPago > 0 ? 'Parcial' : 'Em Aberto'));
 
     const clienteInfo = conta.cliente || 'Cliente não informado';
     const telefoneInfo = conta.telefoneCliente ? `<div class="conta-telefone">📞 ${conta.telefoneCliente}</div>` : '';
@@ -1775,7 +1851,7 @@ function renderizarContasAReceber() {
         </div>
 
         <div class="conta-actions">
-          ${saldoRestante > 0 ? `
+          ${!cancelada && saldoRestante > 0 ? `
             <button class="btn btn-sm btn-primary" onclick="abrirModalPagarContaAReceber('${conta.docId}')">
               <i class="fa-solid fa-hand-holding-dollar"></i> Receber
             </button>
