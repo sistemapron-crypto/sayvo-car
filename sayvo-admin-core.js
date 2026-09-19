@@ -2383,3 +2383,5 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inputBusca) inputBusca.addEventListener("input", renderizarContasAReceber);
   if (btnAddConta) btnAddConta.addEventListener("click", abrirModalCriarContaManual);
 });
+
+// SAYVO - atualização de deploy
