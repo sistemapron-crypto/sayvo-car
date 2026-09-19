@@ -241,12 +241,14 @@ function atualizarDashboard() {
   if (elEstoqueAtivos) elEstoqueAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elEstoqueDestaques) elEstoqueDestaques.textContent = todosProdutos.filter(p => p.destaque).length;
 
-  if (elVendasHojeQtd) elVendasHojeQtd.textContent = vendasHoje.length;
-  const totalHoje = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasHojeValidas = vendasHoje.filter(v => v.status !== "cancelada");
+  if (elVendasHojeQtd) elVendasHojeQtd.textContent = vendasHojeValidas.length;
+  const totalHoje = vendasHojeValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   if (elVendasHojeTotal) elVendasHojeTotal.textContent = formatarMoeda(totalHoje);
 
   let totalPendente = 0;
   todasContasAReceber.forEach(conta => {
+    if (conta.status === "cancelada" || conta.statusVenda === "cancelada") return;
     const orig = conta.valorOriginal || conta.totalAReceber || 0;
     const pago = conta.totalPago || 0;
     const rest = conta.saldoRestante !== undefined ? conta.saldoRestante : (orig - pago);
@@ -305,14 +307,15 @@ function atualizarStats() {
   const elCats = document.getElementById("stat-cats");
   const elTopCount = document.getElementById("topbar-count");
 
-  const totalPatio = todosProdutos.filter(p => p.ativo !== false).length;
-
-  if (elTotal) elTotal.textContent = totalPatio;
+  if (elTotal) elTotal.textContent = todosProdutos.length;
   if (elAtivos) elAtivos.textContent = todosProdutos.filter(p => p.ativo !== false).length;
   if (elDestaque) elDestaque.textContent = todosProdutos.filter(p => p.destaque).length;
   if (elCats) elCats.textContent = todasCategorias.length;
-
   if (elTopCount) {
+    const totalPatio = todosProdutos.filter(
+      p => p.ativo !== false && p.vendido !== true
+    ).length;
+
     elTopCount.textContent = `${totalPatio} veículos em estoque`;
     elTopCount.setAttribute("data-count", totalPatio);
   }
@@ -390,7 +393,8 @@ function mostrarTabela(lista) {
         ? '<span class="badge badge-inativo"><i class="fa-solid fa-check-double"></i> Vendido</span>'
         : p.ativo !== false
           ? '<span class="badge badge-ativo"><i class="fa-solid fa-check"></i> Ativo</span>'
-          : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'}
+          : '<span class="badge badge-inativo"><i class="fa-solid fa-xmark"></i> Inativo</span>'
+      }
         ${p.destaque ? ' <span class="badge badge-destaque"><i class="fa-solid fa-star"></i> Destaque</span>' : ''}
       </td>
       <td>
@@ -612,6 +616,83 @@ function abrirModalEditar(docId) {
   abrirModal("modal-produto");
 }
 
+async function cancelarVendaRelacionadaAoVeiculo(docId) {
+  const snap = await db.collection("vendas")
+    .orderBy("criadoEm", "desc")
+    .get();
+
+  const vendas = snap.docs
+    .map(d => ({ docId: d.id, ...d.data() }))
+    .filter(v =>
+      v.status !== "cancelada" &&
+      Array.isArray(v.itens) &&
+      v.itens.some(i => String(i.docId) === String(docId))
+    );
+
+  const venda = vendas[0];
+  if (!venda) return null;
+
+  const agora = firebase.firestore.FieldValue.serverTimestamp();
+  await db.collection("vendas").doc(venda.docId).update({
+    status: "cancelada",
+    canceladaEm: agora,
+    motivoCancelamento: "Veículo reativado no estoque pelo administrador."
+  });
+
+  const contas = new Map();
+  const [porVenda, porPedido] = await Promise.all([
+    db.collection("contasAReceber").where("vendaId", "==", venda.docId).get(),
+    db.collection("contasAReceber").where("pedidoId", "==", venda.docId).get()
+  ]);
+
+  porVenda.docs.forEach(d => contas.set(d.id, d));
+  porPedido.docs.forEach(d => contas.set(d.id, d));
+
+  if (contas.size) {
+    const batch = db.batch();
+    contas.forEach(d => {
+      batch.update(db.collection("contasAReceber").doc(d.id), {
+        statusVenda: "cancelada",
+        status: "cancelada",
+        canceladaEm: agora
+      });
+    });
+    await batch.commit();
+  }
+
+  return venda;
+}
+
+async function finalizarReativacaoVeiculo(docId, dados) {
+  try {
+    const venda = await cancelarVendaRelacionadaAoVeiculo(docId);
+
+    const dadosReativacao = { ...dados, ativo: true, vendido: false };
+    await db.collection("produtos").doc(docId).update(dadosReativacao);
+
+    fecharModal("confirm-modal");
+    fecharModal("modal-produto");
+
+    toast(
+      venda
+        ? "Venda cancelada e veículo reativado no estoque."
+        : "Veículo reativado no estoque.",
+      "ok"
+    );
+
+    await Promise.all([
+      carregarProdutos(),
+      carregarVendasHoje(),
+      carregarRelatorio(),
+      carregarContasAReceber()
+    ]);
+    atualizarDashboard();
+  } catch (e) {
+    console.error("Erro ao cancelar venda/reativar veículo:", e);
+    toast("Erro ao reativar veículo: " + e.message, "err");
+  }
+}
+
 async function salvarProduto() {
   const docId = document.getElementById("form-id").value;
   let nome = document.getElementById("form-nome").value.trim();
@@ -657,30 +738,44 @@ async function salvarProduto() {
   const imagem = imagens[0] || "";
 
   const dados = {
-    nome,
-    categoria,
-    preco,
-    imagem,
-    imagens,
-    descricao,
-    ativo,
-    destaque,
-    marca,
-    modelo,
-    versao,
-    anoFabricacao,
-    anoModelo,
-    km,
-    cambio,
-    combustivel,
-    cor,
+  nome,
+  categoria,
+  preco,
+  imagem,
+  imagens,
+  descricao,
+  ativo,
+  destaque,
+  marca,
+  modelo,
+  versao,
+  anoFabricacao,
+  anoModelo,
+  km,
+  cambio,
+  combustivel,
+  cor,
 
-    // Ao reativar um veículo vendido, ele volta a ficar disponível
-    vendido: ativo ? false : (docId
-      ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))?.vendido === true
-      : false)
-  };
+  // Ao reativar um veículo vendido, ele volta a ficar disponível
+  vendido: ativo ? false : (docId
+    ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))?.vendido === true
+    : false)
+ };
 
+  const produtoAtual = docId
+    ? todosProdutos.find(p => String(p.docId || p.id) === String(docId))
+    : null;
+
+  if (docId && ativo && produtoAtual?.vendido === true) {
+    document.getElementById("confirm-msg").textContent =
+      "Este veículo está marcado como vendido. Ao reativá-lo, a venda será cancelada no histórico e retirada dos totais. Deseja continuar?";
+
+    document.getElementById("confirm-ok-btn").onclick = () =>
+      finalizarReativacaoVeiculo(docId, dados);
+
+    abrirModal("confirm-modal");
+    return;
+  }
 
   try {
     if (docId) {
@@ -1424,201 +1519,6 @@ function pdvAplicarCupom() {
   renderPdvCart();
 }
 
-async function pdvFinalizarVenda() {
-
-  if (!pdvCarrinho.length) {
-    toast("Adicione ao menos um veículo para fechar a venda.", "err");
-    return;
-  }
-
-  const subtotal = pdvCalcularSubtotal();
-  const desconto = pdvCalcularDesconto(subtotal);
-  const totalOriginal = subtotal - desconto;
-  const pagamentos = pdvCalcularPagamentos(totalOriginal);
-
-  const cliente = document.getElementById("pdv-cliente")?.value.trim();
-  const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
-
-  if (
-    pagamentos.length > 1 &&
-    (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)
-  ) {
-    toast("Informe um valor válido para a 2ª forma de pagamento.", "err");
-    return;
-  }
-
-  const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
-
-  if (possuiAPrazo && !cliente) {
-    toast("Informe o nome do cliente para venda a prazo.", "err");
-    return;
-  }
-
-  let dadosPrazo = null;
-  let totalFinalVenda = totalOriginal;
-
-  if (possuiAPrazo) {
-
-    const valorBaseAPrazo =
-      pdvCalcularValorAPrazo(totalOriginal, pagamentos);
-
-    const acrescimoPct =
-      parseFloat(
-        document.getElementById("pdv-porcentagem-acrescimo")?.value
-      ) || 0;
-
-    const qtdParcelas =
-      parseInt(
-        document.getElementById("pdv-qtd-parcelas")?.value
-      ) || 1;
-
-    const valorJuros =
-      valorBaseAPrazo * (acrescimoPct / 100);
-
-    const valorTotalPrazoComJuros =
-      valorBaseAPrazo + valorJuros;
-
-    const valorParcela =
-      valorTotalPrazoComJuros / qtdParcelas;
-
-    totalFinalVenda =
-      (totalOriginal - valorBaseAPrazo) +
-      valorTotalPrazoComJuros;
-
-    dadosPrazo = {
-      valorBase: valorBaseAPrazo,
-      acrescimoPct,
-      valorJuros,
-      valorTotalPrazoComJuros,
-      qtdParcelas,
-      valorParcela
-    };
-  }
-
-  const venda = {
-
-    itens: pdvCarrinho.map(i => ({
-      docId: i.docId,
-      nome: i.nome,
-      preco: i.preco,
-      qtd: i.qtd
-    })),
-
-    subtotal,
-    desconto,
-    total: totalFinalVenda,
-
-    pagamentos,
-
-    pagamento:
-      pagamentos
-        .map(p => PAG_LABEL[p.forma] || p.forma)
-        .join(" + "),
-
-    cliente: cliente || null,
-    telefone,
-
-    prazoDetalhes: dadosPrazo,
-
-    cupom:
-      pdvCupomAplicado
-        ? pdvCupomAplicado.codigo
-        : null,
-
-    criadoEm:
-      firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  try {
-
-    // 1. Salva a venda
-    const refDoc =
-      await db.collection("vendas").add(venda);
-
-    // 2. MARCA OS VEÍCULOS COMO VENDIDOS
-    for (const item of pdvCarrinho) {
-
-      if (!item.docId) {
-        console.warn("Veículo sem docId:", item);
-        continue;
-      }
-
-      console.log("Marcando veículo como vendido:", item.docId);
-
-      await db
-        .collection("produtos")
-        .doc(item.docId)
-        .update({
-          ativo: false,
-          status: "Vendido",
-          vendidoEm:
-            firebase.firestore.FieldValue.serverTimestamp()
-        });
-    }
-
-    // 3. Cria conta a receber se for venda a prazo
-    if (possuiAPrazo && dadosPrazo) {
-
-      await db.collection("contasAReceber").add({
-
-        vendaId: refDoc.id,
-        pedidoId: refDoc.id,
-
-        cliente,
-        telefoneCliente: telefone || null,
-
-        valorOriginal:
-          dadosPrazo.valorTotalPrazoComJuros,
-
-        totalAReceber:
-          dadosPrazo.valorTotalPrazoComJuros,
-
-        totalPago: 0,
-
-        saldoRestante:
-          dadosPrazo.valorTotalPrazoComJuros,
-
-        qtdParcelas:
-          dadosPrazo.qtdParcelas,
-
-        valorParcela:
-          dadosPrazo.valorParcela,
-
-        statusVenda: "em_aberto",
-
-        descricao:
-          `Venda a prazo de veículo (${dadosPrazo.qtdParcelas}x)`,
-
-        criadoEm:
-          firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    toast("Venda finalizada com sucesso!", "ok");
-
-    pdvLimparCarrinho();
-
-    await carregarProdutos();
-    await carregarVendasHoje();
-    await carregarContasAReceber();
-
-    atualizarDashboard();
-    renderPdvGrid();
-
-  } catch (e) {
-
-    console.error(
-      "Erro ao finalizar venda:",
-      e
-    );
-
-    toast(
-      "Erro ao finalizar venda: " + e.message,
-      "err"
-    );
-  }
-}
-
 async function carregarVendasHoje() {
   try {
     const inicioHoje = new Date();
@@ -1647,6 +1547,8 @@ function linhaVenda(v, origem, comData) {
     ? v.pagamentos.map(p => `${PAG_LABEL[p.forma] || p.forma} (${formatarMoeda(p.valor)})`).join(" + ")
     : (PAG_LABEL[v.pagamento] || v.pagamento || '–');
 
+  const cancelada = v.status === "cancelada";
+
   return `
   <tr>
     ${comData ? `<td>${data}</td>` : ''}
@@ -1654,7 +1556,10 @@ function linhaVenda(v, origem, comData) {
     <td><strong>${v.cliente || 'Consumidor'}</strong>${v.telefone ? `<br><small style="color:var(--text-muted);">${v.telefone}</small>` : ''}</td>
     <td style="max-width:240px"><span style="font-size:0.84rem;color:var(--text-muted)">${itensResumo}</span></td>
     <td><span class="badge" style="background:#f1f5f9;color:#334155;">${pagamentoTexto}</span></td>
-    <td style="font-weight:800;color:var(--text-main);">${formatarMoeda(v.total)}</td>
+    <td style="font-weight:800;color:${cancelada ? '#dc2626' : 'var(--text-main)'};">
+      ${formatarMoeda(v.total)}
+      ${cancelada ? `<br><span style="margin-top:5px;display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:#fee2e2;color:#dc2626;font-size:0.72rem;font-weight:800;"><i class="fa-solid fa-ban"></i> CANCELADA</span>` : ''}
+    </td>
     <td>
       <button class="btn btn-danger btn-sm" onclick="confirmarExclusaoVenda('${v.docId}','${origem}')" title="Excluir venda">
         <i class="fa-solid fa-trash"></i>
@@ -1668,8 +1573,9 @@ function renderVendasHoje() {
   const elQtd = document.getElementById("pdv-stat-qtd");
   const elTotal = document.getElementById("pdv-stat-total");
 
-  if (elQtd) elQtd.textContent = vendasHoje.length;
-  const total = vendasHoje.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasValidas = vendasHoje.filter(v => v.status !== "cancelada");
+  if (elQtd) elQtd.textContent = vendasValidas.length;
+  const total = vendasValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   if (elTotal) elTotal.textContent = formatarMoeda(total);
 
   if (!tbody) return;
@@ -1712,6 +1618,24 @@ function confirmarExclusaoVenda(docId, origem) {
   abrirModal("confirm-modal");
 }
 
+async function carregarVendasHoje() {
+  try {
+    const inicioHoje = new Date();
+    inicioHoje.setHours(0, 0, 0, 0);
+    const snap = await db.collection("vendas")
+      .where("criadoEm", ">=", inicioHoje)
+      .orderBy("criadoEm", "desc")
+      .get();
+    vendasHoje = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderVendasHoje();
+  } catch (e) {
+    const el = document.getElementById("pdv-vendas-tabela");
+    if (el) {
+      el.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Erro ao carregar vendas: ${e.message}</p></div></td></tr>`;
+    }
+  }
+}
+
 // ── RELATÓRIOS ───────────────────────────────────────────────────────────────
 async function carregarRelatorio() {
   try {
@@ -1737,14 +1661,15 @@ async function carregarRelatorio() {
 }
 
 function renderRelatorio() {
-  const totalMes = vendasRelatorio.reduce((s, v) => s + Number(v.total || 0), 0);
+  const vendasValidas = vendasRelatorio.filter(v => v.status !== "cancelada");
+  const totalMes = vendasValidas.reduce((s, v) => s + Number(v.total || 0), 0);
   const elQtd = document.getElementById("relatorio-stat-qtd");
   const elTotal = document.getElementById("relatorio-stat-total");
   const elTicket = document.getElementById("relatorio-stat-ticket");
 
-  if (elQtd) elQtd.textContent = vendasRelatorio.length;
+  if (elQtd) elQtd.textContent = vendasValidas.length;
   if (elTotal) elTotal.textContent = formatarMoeda(totalMes);
-  if (elTicket) elTicket.textContent = formatarMoeda(vendasRelatorio.length ? totalMes / vendasRelatorio.length : 0);
+  if (elTicket) elTicket.textContent = formatarMoeda(vendasValidas.length ? totalMes / vendasValidas.length : 0);
 
   const tbody = document.getElementById("relatorio-tabela");
   if (!tbody) return;
@@ -1861,8 +1786,9 @@ function renderizarContasAReceber() {
     const qtdParcelas = parseInt(conta.qtdParcelas) || 1;
 
     const pctPago = valOriginal > 0 ? Math.min(100, Math.round((totalPago / valOriginal) * 100)) : 0;
-    const statusBadgeClass = saldoRestante <= 0 ? 'quitada' : (totalPago > 0 ? 'parcial' : 'em-aberto');
-    const statusText = saldoRestante <= 0 ? 'Quitada' : (totalPago > 0 ? 'Parcial' : 'Em Aberto');
+    const cancelada = conta.status === 'cancelada' || conta.statusVenda === 'cancelada';
+    const statusBadgeClass = cancelada ? 'em-aberto' : (saldoRestante <= 0 ? 'quitada' : (totalPago > 0 ? 'parcial' : 'em-aberto'));
+    const statusText = cancelada ? 'Cancelada' : (saldoRestante <= 0 ? 'Quitada' : (totalPago > 0 ? 'Parcial' : 'Em Aberto'));
 
     const clienteInfo = conta.cliente || 'Cliente não informado';
     const telefoneInfo = conta.telefoneCliente ? `<div class="conta-telefone">📞 ${conta.telefoneCliente}</div>` : '';
@@ -1908,7 +1834,7 @@ function renderizarContasAReceber() {
         </div>
 
         <div class="conta-actions">
-          ${saldoRestante > 0 ? `
+          ${!cancelada && saldoRestante > 0 ? `
             <button class="btn btn-sm btn-primary" onclick="abrirModalPagarContaAReceber('${conta.docId}')">
               <i class="fa-solid fa-hand-holding-dollar"></i> Receber
             </button>
