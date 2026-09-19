@@ -1434,33 +1434,16 @@ function calcularSimulacaoParcelas() {
 
   const resEl = document.getElementById("pdv-resumo-parcelamento");
   if (resEl) {
-  resEl.style.display = "block";
-  resEl.style.visibility = "visible";
-  resEl.style.opacity = "1";
-  resEl.style.color = "#111827";
-  resEl.style.background = "#ffffff";
-  resEl.style.padding = "10px";
-  resEl.style.borderRadius = "8px";
-
-  resEl.innerHTML = `
-    <div style="font-size:14px;color:#111827;">
-      Valor a prazo: ${formatarMoeda(valorBaseAPrazo)}
-    </div>
-
-    <div style="font-size:14px;color:#111827;">
-      Total: ${formatarMoeda(valorTotalAPrazo)}
-    </div>
-
-    <div style="
-      font-size:18px;
-      font-weight:800;
-      color:#111827;
-      margin-top:6px;
-    ">
-      ${qtdParcelas}x de ${formatarMoeda(valorParcela)}
-    </div>
-  `;
-}
+    if (acrescimoPct > 0) {
+      resEl.innerHTML = `
+        <div>Valor a prazo original: ${formatarMoeda(valorBaseAPrazo)}</div>
+        <div>Com acréscimo (${acrescimoPct}%): ${formatarMoeda(valorTotalAPrazo)}</div>
+        <div style="font-size:1.1rem;color:var(--text-main);margin-top:4px;">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>
+      `;
+    } else {
+      resEl.innerHTML = `<div style="font-size:1.1rem;color:var(--text-main);">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>`;
+    }
+  }
 }
 
 function renderPdvCart() {
@@ -2383,5 +2366,3 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inputBusca) inputBusca.addEventListener("input", renderizarContasAReceber);
   if (btnAddConta) btnAddConta.addEventListener("click", abrirModalCriarContaManual);
 });
-
-// SAYVO - atualização de deploy
