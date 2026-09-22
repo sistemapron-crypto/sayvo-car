@@ -86,7 +86,7 @@ export default function App() {
 
         <div
           className="w-full h-[4px]"
-          style={{ backgroundColor: '#aeee02' }} //var(--cor-primaria)
+          style={{ backgroundColor: 'var(--cor-primaria' }} //var(--cor-primaria)
         />
       </div>
 
