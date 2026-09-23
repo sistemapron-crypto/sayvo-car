@@ -8,6 +8,7 @@ import { MobileFiltersModal } from '../components/catalog/MobileFiltersModal';
 import { VehicleGrid } from '../components/catalog/VehicleGrid';
 import { Vehicle, VehicleFilters } from '../types/vehicle';
 import { vehicleService } from '../services/vehicleService';
+import { VehicleCardDesktop } from '../components/catalog/VehicleCardDesktop';
 
 interface CatalogPageProps {
   onSelectVehicle: (vehicle: Vehicle) => void;
@@ -40,21 +41,55 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     ...DEFAULT_FILTERS,
     ...initialFilters,
   });
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [availableBrands, setAvailableBrands] = useState<{ name: string; count: number }[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState<boolean>(false);
+  const [availableBrands, setAvailableBrands] = useState<
+    { name: string; count: number }[]
+  >([]);
 
-  // Load brands on mount
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] =
+    useState<boolean>(false);
+
+  const [featuredVehicles, setFeaturedVehicles] = useState<Vehicle[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] =
+    useState<boolean>(true);
+
+  // =========================================================
+  // CARREGAMENTO INICIAL
+  // =========================================================
+
   useEffect(() => {
-    vehicleService.getAvailableBrands().then(setAvailableBrands);
-    vehicleService.getTotalVehiclesCount().then(setTotalCount);
+    vehicleService
+      .getAvailableBrands()
+      .then(setAvailableBrands);
+
+    vehicleService
+      .getTotalVehiclesCount()
+      .then(setTotalCount);
+
+    setIsLoadingFeatured(true);
+
+    vehicleService
+      .getFeaturedVehicles()
+      .then((data) => {
+        setFeaturedVehicles(data);
+        setIsLoadingFeatured(false);
+      })
+      .catch(() => {
+        setFeaturedVehicles([]);
+        setIsLoadingFeatured(false);
+      });
   }, []);
 
-  // Fetch vehicles whenever filters change
+  // =========================================================
+  // CARREGAR ESTOQUE CONFORME OS FILTROS
+  // =========================================================
+
   useEffect(() => {
     let isCurrent = true;
+
     setIsLoading(true);
 
     vehicleService
@@ -66,7 +101,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
         }
       })
       .catch(() => {
-        if (isCurrent) setIsLoading(false);
+        if (isCurrent) {
+          setIsLoading(false);
+        }
       });
 
     return () => {
@@ -74,9 +111,17 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     };
   }, [filters]);
 
+  // =========================================================
+  // RESETAR FILTROS
+  // =========================================================
+
   const handleResetFilters = () => {
     setFilters(DEFAULT_FILTERS);
   };
+
+  // =========================================================
+  // CONTADOR DE FILTROS
+  // =========================================================
 
   const activeFilterCount =
     (filters.searchQuery ? 1 : 0) +
@@ -85,85 +130,233 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     (filters.maxPrice && filters.maxPrice < 1000000 ? 1 : 0) +
     (filters.minAno ? 1 : 0) +
     (filters.maxAno ? 1 : 0) +
-    (filters.combustível && filters.combustível !== 'Todos' ? 1 : 0) +
-    (filters.transmissão && filters.transmissão !== 'Todas' ? 1 : 0);
+    (filters.combustível &&
+    filters.combustível !== 'Todos'
+      ? 1
+      : 0) +
+    (filters.transmissão &&
+    filters.transmissão !== 'Todas'
+      ? 1
+      : 0);
+
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-16">
-      {/* Visual Automotive Banner between Header and Stock */}
+
+      {/* =====================================================
+          BANNER
+      ====================================================== */}
+
       <div className="-mt-20">
         <StockBanner />
       </div>
 
+      {/* =====================================================
+          CONTEÚDO PRINCIPAL
+      ====================================================== */}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+
         {/* Breadcrumb */}
         <Breadcrumb
-          items={[{ label: 'Estoque de Veículos', active: true }]}
+          items={[
+            {
+              label: 'Estoque de Veículos',
+              active: true,
+            },
+          ]}
           onHomeClick={() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (onNavigateHome) onNavigateHome();
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth',
+            });
+
+            if (onNavigateHome) {
+              onNavigateHome();
+            }
           }}
         />
 
-        {/* Page Title: "Seu próximo carro está aqui" */}
+        {/* Título principal */}
         <h1 className="text-1xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mt-1 mb-6">
           SEU PRÓXIMO CARRO ESTÁ AQUI
         </h1>
 
-        {/* Mobile Search and Filter Button Row matching Reference 2 */}
+        {/* ===================================================
+            BUSCA MOBILE
+        ==================================================== */}
+
         <div className="md:hidden mb-4">
           <SearchBar
             value={filters.searchQuery}
-            onChange={(val) => setFilters((prev) => ({ ...prev, searchQuery: val }))}
-            onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
+            onChange={(val) =>
+              setFilters((prev) => ({
+                ...prev,
+                searchQuery: val,
+              }))
+            }
+            onOpenMobileFilters={() =>
+              setIsMobileFiltersOpen(true)
+            }
             activeFilterCount={activeFilterCount}
             showFilterButton={true}
           />
         </div>
 
-        {/* Mobile Vehicle Counter matching Reference 2 */}
+        {/* Contador mobile */}
         <div className="md:hidden text-xs sm:text-sm text-slate-500 font-medium mb-3">
           Mostrando {vehicles.length} de {totalCount} veículos
         </div>
 
-        {/* Main Grid: Left Column Filters + Right Column Vehicles Grid */}
+        {/* ===================================================
+            ÁREA DE BUSCA + FILTROS + ESTOQUE
+        ==================================================== */}
+
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-8 items-start">
-          {/* Desktop Left Column Filters matching Reference 1 */}
+
+          {/* =================================================
+              FILTROS DESKTOP
+          ================================================== */}
+
           <div className="hidden md:block md:col-span-1 space-y-4">
-            {/* Desktop Search bar directly above filters matching Reference 1 */}
+
+            {/* Busca */}
             <SearchBar
               value={filters.searchQuery}
-              onChange={(val) => setFilters((prev) => ({ ...prev, searchQuery: val }))}
+              onChange={(val) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  searchQuery: val,
+                }))
+              }
               showFilterButton={false}
             />
 
+            {/* Filtros */}
             <FilterSidebar
               filters={filters}
               onChange={setFilters}
               availableBrands={availableBrands}
               onReset={handleResetFilters}
             />
+
           </div>
 
-          {/* Right Column: Counter + Vehicles Grid */}
+          {/* =================================================
+              CONTEÚDO DOS VEÍCULOS
+          ================================================== */}
+
           <div className="md:col-span-3">
-            {/* Desktop Counter matching Reference 1 */}
+
+            {/* =================================================
+                VEÍCULOS EM DESTAQUE
+            ================================================== */}
+
+            {!isLoadingFeatured &&
+              featuredVehicles.length > 0 && (
+                <section className="mb-10">
+
+                  <div className="flex items-end justify-between mb-5">
+                    <div>
+
+                      <span className="text-xs font-bold uppercase tracking-widest text-[var(--cor-primaria)]">
+                        Seleção especial
+                      </span>
+
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+                        Veículos em destaque
+                      </h2>
+
+                      <p className="text-sm text-slate-500 mt-1">
+                        Confira os veículos selecionados pela nossa equipe.
+                      </p>
+
+                    </div>
+                  </div>
+
+                  {/* Mobile */}
+                  <div className="md:hidden -mx-4 px-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide">
+                    <div className="flex gap-4">
+
+                      {featuredVehicles.map((vehicle) => (
+                        <div
+                          key={vehicle.id}
+                          className="w-[86vw] max-w-[360px] shrink-0 snap-start"
+                        >
+                          <VehicleCardDesktop
+                            vehicle={vehicle}
+                            onSelect={onSelectVehicle}
+                          />
+                        </div>
+                      ))}
+
+                    </div>
+                  </div>
+
+                  {/* Desktop */}
+                  <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    {featuredVehicles.map((vehicle) => (
+                      <VehicleCardDesktop
+                        key={vehicle.id}
+                        vehicle={vehicle}
+                        onSelect={onSelectVehicle}
+                      />
+                    ))}
+
+                  </div>
+
+                </section>
+              )}
+
+            {/* =================================================
+                CABEÇALHO DO ESTOQUE NORMAL
+            ================================================== */}
+
+            <div className="flex items-end justify-between mb-5">
+
+              <div>
+                
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+                  Estoque de veículos
+                </h2>
+
+              </div>
+
+            </div>
+
+            {/* =================================================
+                CONTADOR DESKTOP
+            ================================================== */}
+
             <div className="hidden md:flex items-center justify-between text-xs sm:text-sm text-slate-500 font-medium mb-4">
+
               <span>
                 Mostrando {vehicles.length} de {totalCount} veículos
               </span>
+
               {activeFilterCount > 0 && (
                 <button
                   type="button"
                   onClick={handleResetFilters}
                   className="text-xs text-violet-700 hover:text-violet-900 font-semibold cursor-pointer"
                 >
-                  Limpar {activeFilterCount} {activeFilterCount === 1 ? 'filtro' : 'filtros'}
+                  Limpar {activeFilterCount}{' '}
+                  {activeFilterCount === 1
+                    ? 'filtro'
+                    : 'filtros'}
                 </button>
               )}
+
             </div>
 
-            {/* Vehicles Grid / Mobile List */}
+            {/* =================================================
+                ESTOQUE NORMAL
+            ================================================== */}
+
             <VehicleGrid
               vehicles={vehicles}
               isLoading={isLoading}
@@ -172,14 +365,22 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
               onSelectVehicle={onSelectVehicle}
               onResetFilters={handleResetFilters}
             />
+
           </div>
+
         </div>
+
       </div>
 
-      {/* Mobile Filters Drawer Modal */}
+      {/* =====================================================
+          FILTROS MOBILE
+      ====================================================== */}
+
       <MobileFiltersModal
         isOpen={isMobileFiltersOpen}
-        onClose={() => setIsMobileFiltersOpen(false)}
+        onClose={() =>
+          setIsMobileFiltersOpen(false)
+        }
         filters={filters}
         onChange={setFilters}
         availableBrands={availableBrands}
@@ -187,8 +388,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
         totalFilteredCount={vehicles.length}
       />
 
-      {/* Onde estamos / Localização & Showroom */}
+      {/* =====================================================
+          LOCALIZAÇÃO / SHOWROOM
+      ====================================================== */}
+
       <LocationSection className="mt-16" />
+
     </main>
   );
 };

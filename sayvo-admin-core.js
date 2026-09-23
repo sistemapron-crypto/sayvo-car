@@ -1639,10 +1639,55 @@ async function carregarVendasHoje() {
 // ── RELATÓRIOS ───────────────────────────────────────────────────────────────
 async function carregarRelatorio() {
   try {
-    const mesStr = document.getElementById("relatorio-mes")?.value || mesAtualStr();
-    const [ano, mes] = mesStr.split("-").map(Number);
-    const inicio = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
-    const fim = new Date(ano, mes, 1, 0, 0, 0, 0);
+    const hoje = new Date();
+
+    const inicioInput = document.getElementById("relatorio-data-inicio");
+    const fimInput = document.getElementById("relatorio-data-fim");
+
+    // Se ainda não houver datas selecionadas, usa o mês atual inteiro
+    let inicio;
+    let fim;
+
+    if (inicioInput?.value && fimInput?.value) {
+      const [anoInicio, mesInicio, diaInicio] = inicioInput.value.split("-").map(Number);
+      const [anoFim, mesFim, diaFim] = fimInput.value.split("-").map(Number);
+
+      inicio = new Date(
+        anoInicio,
+        mesInicio - 1,
+        diaInicio,
+        0, 0, 0, 0
+      );
+
+      // Fim do período = início do dia seguinte
+      fim = new Date(
+        anoFim,
+        mesFim - 1,
+        diaFim + 1,
+        0, 0, 0, 0
+      );
+    } else {
+      // Mês atual como padrão
+      inicio = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        1,
+        0, 0, 0, 0
+      );
+
+      fim = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth() + 1,
+        1,
+        0, 0, 0, 0
+      );
+    }
+
+    // Evita período invertido
+    if (inicio >= fim) {
+      toast("A data inicial deve ser anterior à data final.", "err");
+      return;
+    }
 
     const snap = await db.collection("vendas")
       .where("criadoEm", ">=", inicio)
@@ -1650,12 +1695,26 @@ async function carregarRelatorio() {
       .orderBy("criadoEm", "desc")
       .get();
 
-    vendasRelatorio = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    vendasRelatorio = snap.docs.map(d => ({
+      docId: d.id,
+      ...d.data()
+    }));
+
     renderRelatorio();
+
   } catch (e) {
     const tbody = document.getElementById("relatorio-tabela");
+
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>Erro ao carregar relatório: ${e.message}</p></div></td></tr>`;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <p>Erro ao carregar relatório: ${e.message}</p>
+            </div>
+          </td>
+        </tr>
+      `;
     }
   }
 }

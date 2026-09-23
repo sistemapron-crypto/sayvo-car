@@ -573,8 +573,10 @@
               </h2>
               <p>Acompanhe o volume faturado, quantidade de vendas e ticket médio mês a mês.</p>
             </div>
-            <div class="toolbar" style="margin-bottom:0;">
-              <input type="month" id="relatorio-mes" onchange="carregarRelatorio()">
+            <div class="toolbar" style="margin-bottom:0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="date" id="relatorio-data-inicio" onchange="carregarRelatorio()">
+              <span style="color:var(--text-muted);">até</span>
+              <input type="date" id="relatorio-data-fim" onchange="carregarRelatorio()">
             </div>
           </div>
 

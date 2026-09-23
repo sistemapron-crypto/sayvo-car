@@ -1,161 +1,981 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seed Firebase – SAYVO Catalogo</title>
+
+  <title>Seed Firebase – SAYVO AUTO</title>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-    h1 { font-size: 1.4rem; margin-bottom: 8px; color: #f0c040; }
-    p  { font-size: .9rem; color: #aaa; margin-bottom: 24px; text-align: center; max-width: 480px; }
-    #btn { padding: 14px 36px; background: #f0c040; color: #000; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: opacity .2s; }
-    #btn:disabled { opacity: .45; cursor: not-allowed; }
-    #log  { margin-top: 24px; width: 100%; max-width: 540px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: .8rem; font-family: monospace; max-height: 360px; overflow-y: auto; }
-    .ok   { color: #4caf50; }
-    .err  { color: #f44336; }
-    .info { color: #90caf9; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      color: #aeee02;
+    }
+
+    p {
+      font-size: .9rem;
+      color: #aaa;
+      margin-bottom: 24px;
+      text-align: center;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    #btn {
+      padding: 14px 36px;
+      background: #aeee02;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+
+    #btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    #log {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 620px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: .8rem;
+      font-family: monospace;
+      max-height: 420px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .ok {
+      color: #4caf50;
+    }
+
+    .err {
+      color: #f44336;
+    }
+
+    .info {
+      color: #90caf9;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>🔥Seed de Produtos – SAYVO Catalogo</h1>
-<p>Clique no botão abaixo para enviar todos os produtos, categorias e cupons ao Firestore do Firebase. Execute <strong>apenas uma vez</strong>. Se rodar novamente, usará <code>set</code> com o mesmo ID (não duplica).</p>
+  <h1>🚗 Seed – SAYVO AUTO</h1>
 
-<button id="btn">🚀 Enviar Produtos ao Firebase</button>
+  <p>
+    Clique no botão abaixo para cadastrar uma revenda fictícia de demonstração
+    no Firebase, incluindo veículos, categorias, marcas e cupom.
+    Execute apenas quando quiser preencher o ambiente de demonstração.
+  </p>
 
-<div id="log"><span class="info">Aguardando…</span></div>
+  <button id="btn">
+    🚀 Carregar Estoque de Demonstração
+  </button>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <div id="log">
+    <span class="info">Aguardando...</span>
+  </div>
 
-<script>
-//Preencher com as credenciais do Firebase.
-const firebaseConfig = {
-  apiKey: "AIzaSyBJFrMrZ7XdBpn1jJqtPz1eC2IKvcQYrrc",
-  authDomain: "catalogo-modelo-3ba73.firebaseapp.com",
-  projectId: "catalogo-modelo-3ba73",
-  storageBucket: "catalogo-modelo-3ba73.firebasestorage.app",
-  messagingSenderId: "380760744772",
-  appId: "1:380760744772:web:c992400bdbcf840845ad11"
-};
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-const produtos = [
-  { id: 1, nome: "Batom",                                          categoria: "maquiagens", preco: 49.00,  imagem: "./assets/batom.jpg",                descricao: "Batom Cremoso Vermelho" },
-  { id: 2, nome: "Kit Mini Batom + Mini Blush",                     categoria: "maquiagens", preco: 90.00,  imagem: "./assets/kit-batom blush.webp",     descricao: "Kit Mini Batom Líquido Nude Matte + Mini Blush" },
-  { id: 3, nome: "Kit Skin Care Facial e Efeito Peeling",           categoria: "skincare",   preco: 50.00,  imagem: "./assets/skin Care1.webp",          descricao: "Kit Skin Care Anti Manchas Clareador Facial e Efeito Peeling" },
-  { id: 4, nome: "Kit Skin care Vitamina C",                        categoria: "skincare",   preco: 120.00, imagem: "./assets/skin-care2.webp",          descricao: "Kit Skin care Vitamina C Anti-idade Clareador Facial" },
-  { id: 5, nome: "Pincel Para Pó Facial",                           categoria: "acessórios", preco: 32.99,  imagem: "./assets/pincel1.webp",             descricao: "Pincel Para Pó Facial" },
-  { id: 6, nome: "Bolsa Organizadora De Acessórios Para Maquiagem", categoria: "acessórios", preco: 49.99,  imagem: "./assets/bolsa-maquiagem.jpeg",     descricao: "Bolsa Organizadora De Acessórios Para Maquiagem" },
-];
+  <script>
 
-const categorias = [
-  { id: "all",        nome: "Todos",       icone: "fa-border-all" },
-  { id: "maquiagens", nome: "Maquiagens",  icone: "fa-wand-magic-sparkles" },
-  { id: "skincare",   nome: "Skin care",   icone: "fa-spa" },
-  { id: "acessórios", nome: "Acessórios",  icone: "fa-gem" },
-];
+    // ============================================================
+    // CONFIGURAÇÃO FIREBASE
+    // ============================================================
 
-const cupons = [
-  { codigo: "DESCONTO10", tipo: "percentual", valor: 10, valorMinimo: 0, validade: null, ativo: true },
-];
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJFrMrZ7XdBpn1jJqtPz1eC2IKvcQYrrc",
+      authDomain: "catalogo-modelo-3ba73.firebaseapp.com",
+      projectId: "catalogo-modelo-3ba73",
+      storageBucket: "catalogo-modelo-3ba73.firebasestorage.app",
+      messagingSenderId: "380760744772",
+      appId: "1:380760744772:web:c992400bdbcf840845ad11"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
 
-const log = document.getElementById("log");
-const btn = document.getElementById("btn");
+    const db = firebase.firestore();
 
-async function autenticarAdmin() {
-  const email = prompt("Digite o e-mail do administrador:");
-  const senha = prompt("Digite a senha do administrador:");
+    const log = document.getElementById("log");
+    const btn = document.getElementById("btn");
 
-  if (!email || !senha) {
-    throw new Error("Login cancelado.");
-  }
 
-  await firebase.auth().signInWithEmailAndPassword(email, senha);
-}
+    // ============================================================
+    // VEÍCULOS
+    // Revenda fictícia: PRIME MOTORS VEÍCULOS
+    // ============================================================
 
-const addLog = (msg, tipo = "ok") => {
-  const span = document.createElement("span");
-  span.className = tipo;
-  span.textContent = msg;
-  log.appendChild(span);
-  log.appendChild(document.createElement("br"));
-  log.scrollTop = log.scrollHeight;
-};
+    const produtos = [
 
-btn.addEventListener("click", async () => {
-  btn.disabled = true;
-  log.innerHTML = "";
+      {
+        id: 1,
+        nome: "Toyota Corolla XEi 2.0 Flex",
+        marca: "Toyota",
+        modelo: "Corolla",
+        versao: "XEi 2.0 Flex",
+        categoria: "Sedan",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 38500,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Prata",
+        preco: 148900,
+        imagem: "",
+        imagens: [],
+        descricao: "Veículo muito conservado, com excelente acabamento e histórico de manutenção. Câmbio automático, bancos em couro, central multimídia, câmera de ré, controle de velocidade e chave presencial.",
+        ativo: true,
+        destaque: true
+      },
 
-  try {
-    addLog("🔐 Autenticando administrador...", "info");
+      {
+        id: 2,
+        nome: "Chevrolet Onix Premier 1.0 Turbo",
+        marca: "Chevrolet",
+        modelo: "Onix",
+        versao: "Premier 1.0 Turbo",
+        categoria: "Hatch",
+        anoFabricacao: 2024,
+        anoModelo: 2024,
+        km: 21900,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Branco",
+        preco: 98900,
+        imagem: "",
+        imagens: [],
+        descricao: "Onix Premier em excelente estado de conservação. Motor 1.0 Turbo, câmbio automático, central multimídia, câmera de ré, sensores de estacionamento e chave presencial.",
+        ativo: true,
+        destaque: true
+      },
 
-    await autenticarAdmin();
+      {
+        id: 3,
+        nome: "Jeep Compass Limited T270",
+        marca: "Jeep",
+        modelo: "Compass",
+        versao: "Limited T270",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 31200,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Cinza",
+        preco: 169900,
+        imagem: "",
+        imagens: [],
+        descricao: "SUV completo e muito bem conservado. Motor T270 Turbo Flex, bancos em couro, multimídia, câmera de ré, sensores, controle de cruzeiro e diversos recursos de segurança.",
+        ativo: true,
+        destaque: true
+      },
 
-    addLog("✔ Administrador autenticado.", "ok");
-    addLog("▶ Iniciando envio...", "info");
+      {
+        id: 4,
+        nome: "Volkswagen T-Cross Highline 250 TSI",
+        marca: "Volkswagen",
+        modelo: "T-Cross",
+        versao: "Highline 250 TSI",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 28700,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Cinza Platinum",
+        preco: 139900,
+        imagem: "",
+        imagens: [],
+        descricao: "T-Cross Highline com motor 250 TSI. Veículo revisado e pronto para transferência. Bancos em couro, multimídia, câmera de ré, sensores e chave presencial.",
+        ativo: true,
+        destaque: true
+      },
 
-    let ok = 0, erros = 0;
+      {
+        id: 5,
+        nome: "Honda HR-V EXL 1.5",
+        marca: "Honda",
+        modelo: "HR-V",
+        versao: "EXL 1.5",
+        categoria: "SUV",
+        anoFabricacao: 2022,
+        anoModelo: 2023,
+        km: 44600,
+        cambio: "CVT",
+        combustivel: "Flex",
+        cor: "Branco Pérola",
+        preco: 139500,
+        imagem: "",
+        imagens: [],
+        descricao: "Honda HR-V EXL com excelente estado geral. Motor 1.5 Flex, câmbio CVT, bancos em couro, câmera de ré, central multimídia e ótimo espaço interno.",
+        ativo: true,
+        destaque: false
+      },
 
-    for (const p of produtos) {
-      try {
-        await db.collection("produtos").doc(String(p.id)).set({
-          ...p,
-          ativo: true,
-          destaque: false,
-          criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        addLog(`✔ [${p.id}] ${p.nome}`, "ok");
-        ok++;
-      } catch (e) {
-        addLog(`✘ [${p.id}] ${p.nome} — ${e.message}`, "err");
-        erros++;
+      {
+        id: 6,
+        nome: "Toyota Hilux SRV 2.8 Diesel 4x4",
+        marca: "Toyota",
+        modelo: "Hilux",
+        versao: "SRV 2.8 Diesel 4x4",
+        categoria: "Pickup",
+        anoFabricacao: 2022,
+        anoModelo: 2023,
+        km: 58700,
+        cambio: "Automático",
+        combustivel: "Diesel",
+        cor: "Preto",
+        preco: 239900,
+        imagem: "",
+        imagens: [],
+        descricao: "Hilux SRV 4x4 com motor 2.8 Diesel. Picape muito conservada, com bancos em couro, central multimídia, câmera de ré, controle de tração e estabilidade.",
+        ativo: true,
+        destaque: true
+      },
+
+      {
+        id: 7,
+        nome: "Fiat Toro Volcano 2.0 Diesel",
+        marca: "Fiat",
+        modelo: "Toro",
+        versao: "Volcano 2.0 Diesel",
+        categoria: "Pickup",
+        anoFabricacao: 2022,
+        anoModelo: 2022,
+        km: 61200,
+        cambio: "Automático",
+        combustivel: "Diesel",
+        cor: "Vermelho",
+        preco: 132900,
+        imagem: "",
+        imagens: [],
+        descricao: "Fiat Toro Volcano Diesel 4x4. Veículo bem conservado, com bancos em couro, central multimídia, câmera de ré e excelente capacidade para uso urbano e trabalho.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 8,
+        nome: "Hyundai Creta Ultimate 2.0",
+        marca: "Hyundai",
+        modelo: "Creta",
+        versao: "Ultimate 2.0",
+        categoria: "SUV",
+        anoFabricacao: 2022,
+        anoModelo: 2022,
+        km: 49300,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Cinza",
+        preco: 132900,
+        imagem: "",
+        imagens: [],
+        descricao: "Creta Ultimate 2.0 completo. Possui teto solar panorâmico, bancos em couro, câmera de ré, sensores de estacionamento e central multimídia.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 9,
+        nome: "Volkswagen Nivus Highline 200 TSI",
+        marca: "Volkswagen",
+        modelo: "Nivus",
+        versao: "Highline 200 TSI",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 26700,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Azul",
+        preco: 129900,
+        imagem: "",
+        imagens: [],
+        descricao: "Nivus Highline 200 TSI com excelente conservação. Motor turbo, câmbio automático, central multimídia, câmera de ré, controle de cruzeiro e chave presencial.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 10,
+        nome: "Honda Civic Touring 1.5 Turbo",
+        marca: "Honda",
+        modelo: "Civic",
+        versao: "Touring 1.5 Turbo",
+        categoria: "Sedan",
+        anoFabricacao: 2021,
+        anoModelo: 2021,
+        km: 53800,
+        cambio: "CVT",
+        combustivel: "Gasolina",
+        cor: "Cinza",
+        preco: 154900,
+        imagem: "",
+        imagens: [],
+        descricao: "Civic Touring 1.5 Turbo em excelente estado. Versão topo de linha com bancos em couro, teto solar, câmera de ré, sensores e central multimídia.",
+        ativo: true,
+        destaque: true
+      },
+
+      {
+        id: 11,
+        nome: "Chevrolet Tracker Premier 1.2 Turbo",
+        marca: "Chevrolet",
+        modelo: "Tracker",
+        versao: "Premier 1.2 Turbo",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 33400,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Preto",
+        preco: 126900,
+        imagem: "",
+        imagens: [],
+        descricao: "Tracker Premier 1.2 Turbo. SUV confortável e econômico, equipado com central multimídia, câmera de ré, sensores, bancos em couro e chave presencial.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 12,
+        nome: "Fiat Pulse Impetus 1.0 Turbo",
+        marca: "Fiat",
+        modelo: "Pulse",
+        versao: "Impetus 1.0 Turbo",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 24100,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Branco",
+        preco: 109900,
+        imagem: "",
+        imagens: [],
+        descricao: "Fiat Pulse Impetus com motor 1.0 Turbo. Veículo muito bem conservado, com central multimídia, câmera de ré, bancos em couro e ótimo pacote de equipamentos.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 13,
+        nome: "Toyota Yaris XLS 1.5",
+        marca: "Toyota",
+        modelo: "Yaris",
+        versao: "XLS 1.5",
+        categoria: "Hatch",
+        anoFabricacao: 2022,
+        anoModelo: 2023,
+        km: 41800,
+        cambio: "CVT",
+        combustivel: "Flex",
+        cor: "Prata",
+        preco: 92900,
+        imagem: "",
+        imagens: [],
+        descricao: "Yaris XLS 1.5 com excelente histórico de conservação. Câmbio CVT, central multimídia, câmera de ré, bancos em couro e controles de segurança.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 14,
+        nome: "Nissan Kicks Exclusive 1.6",
+        marca: "Nissan",
+        modelo: "Kicks",
+        versao: "Exclusive 1.6",
+        categoria: "SUV",
+        anoFabricacao: 2022,
+        anoModelo: 2023,
+        km: 39800,
+        cambio: "CVT",
+        combustivel: "Flex",
+        cor: "Cinza",
+        preco: 119900,
+        imagem: "",
+        imagens: [],
+        descricao: "Nissan Kicks Exclusive 1.6. SUV econômico e confortável, equipado com câmera de 360 graus, bancos em couro, central multimídia e chave presencial.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 15,
+        nome: "Ford Ranger XLT 3.0 V6 Diesel",
+        marca: "Ford",
+        modelo: "Ranger",
+        versao: "XLT 3.0 V6 Diesel",
+        categoria: "Pickup",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 28900,
+        cambio: "Automático",
+        combustivel: "Diesel",
+        cor: "Cinza",
+        preco: 249900,
+        imagem: "",
+        imagens: [],
+        descricao: "Ford Ranger XLT com motor V6 Diesel. Picape moderna e muito bem equipada, com tração 4x4, central multimídia, câmera de ré e excelente capacidade de carga.",
+        ativo: true,
+        destaque: true
+      },
+
+      {
+        id: 16,
+        nome: "Jeep Renegade Longitude T270",
+        marca: "Jeep",
+        modelo: "Renegade",
+        versao: "Longitude T270",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 35200,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Branco",
+        preco: 119900,
+        imagem: "",
+        imagens: [],
+        descricao: "Renegade Longitude T270 com motor Turbo Flex. Veículo revisado e muito bem conservado, com central multimídia, câmera de ré e controle de cruzeiro.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 17,
+        nome: "Volkswagen Virtus Highline 200 TSI",
+        marca: "Volkswagen",
+        modelo: "Virtus",
+        versao: "Highline 200 TSI",
+        categoria: "Sedan",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 30100,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Prata",
+        preco: 119900,
+        imagem: "",
+        imagens: [],
+        descricao: "Virtus Highline 200 TSI com ótimo espaço interno e excelente desempenho. Motor turbo, câmbio automático, central multimídia e câmera de ré.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 18,
+        nome: "Hyundai HB20 Platinum 1.0 Turbo",
+        marca: "Hyundai",
+        modelo: "HB20",
+        versao: "Platinum 1.0 Turbo",
+        categoria: "Hatch",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 22500,
+        cambio: "Automático",
+        combustivel: "Flex",
+        cor: "Prata",
+        preco: 96900,
+        imagem: "",
+        imagens: [],
+        descricao: "HB20 Platinum Turbo com baixa quilometragem. Veículo muito conservado, com central multimídia, câmera de ré, bancos em couro e chave presencial.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 19,
+        nome: "Renault Duster Iconic 1.3 Turbo",
+        marca: "Renault",
+        modelo: "Duster",
+        versao: "Iconic 1.3 Turbo",
+        categoria: "SUV",
+        anoFabricacao: 2023,
+        anoModelo: 2024,
+        km: 27400,
+        cambio: "CVT",
+        combustivel: "Flex",
+        cor: "Marrom",
+        preco: 119900,
+        imagem: "",
+        imagens: [],
+        descricao: "Duster Iconic 1.3 Turbo em excelente estado. SUV espaçoso e robusto, com câmbio CVT, central multimídia, câmera de ré e bancos em couro.",
+        ativo: true,
+        destaque: false
+      },
+
+      {
+        id: 20,
+        nome: "Chevrolet S10 LTZ 2.8 Diesel 4x4",
+        marca: "Chevrolet",
+        modelo: "S10",
+        versao: "LTZ 2.8 Diesel 4x4",
+        categoria: "Pickup",
+        anoFabricacao: 2022,
+        anoModelo: 2023,
+        km: 64700,
+        cambio: "Automático",
+        combustivel: "Diesel",
+        cor: "Branco",
+        preco: 189900,
+        imagem: "",
+        imagens: [],
+        descricao: "Chevrolet S10 LTZ 4x4 com motor 2.8 Diesel. Picape muito bem conservada, com bancos em couro, central multimídia, câmera de ré e excelente capacidade para trabalho e uso diário.",
+        ativo: true,
+        destaque: false
       }
+
+    ];
+
+
+    // ============================================================
+    // CATEGORIAS
+    // ============================================================
+
+    const categorias = [
+
+      {
+        id: "sedan",
+        nome: "Sedan",
+        icone: "fa-car"
+      },
+
+      {
+        id: "suv",
+        nome: "SUV",
+        icone: "fa-car-side"
+      },
+
+      {
+        id: "hatch",
+        nome: "Hatch",
+        icone: "fa-car"
+      },
+
+      {
+        id: "pickup",
+        nome: "Pickup",
+        icone: "fa-truck-pickup"
+      },
+
+      {
+        id: "utilitario",
+        nome: "Utilitário",
+        icone: "fa-truck"
+      },
+
+      {
+        id: "esportivo",
+        nome: "Esportivo",
+        icone: "fa-gauge-high"
+      }
+
+    ];
+
+
+    // ============================================================
+    // MARCAS
+    // ============================================================
+
+    const marcas = [
+
+      {
+        id: "toyota",
+        nome: "Toyota"
+      },
+
+      {
+        id: "chevrolet",
+        nome: "Chevrolet"
+      },
+
+      {
+        id: "jeep",
+        nome: "Jeep"
+      },
+
+      {
+        id: "volkswagen",
+        nome: "Volkswagen"
+      },
+
+      {
+        id: "honda",
+        nome: "Honda"
+      },
+
+      {
+        id: "fiat",
+        nome: "Fiat"
+      },
+
+      {
+        id: "hyundai",
+        nome: "Hyundai"
+      },
+
+      {
+        id: "nissan",
+        nome: "Nissan"
+      },
+
+      {
+        id: "ford",
+        nome: "Ford"
+      },
+
+      {
+        id: "renault",
+        nome: "Renault"
+      }
+
+    ];
+
+
+    // ============================================================
+    // CUPOM DE DEMONSTRAÇÃO
+    // ============================================================
+
+    const cupons = [
+
+      {
+        codigo: "PRIME10",
+        tipo: "percentual",
+        valor: 10,
+        valorMinimo: 0,
+        validade: null,
+        ativo: true
+      }
+
+    ];
+
+
+    // ============================================================
+    // AUTENTICAÇÃO
+    // ============================================================
+
+    async function autenticarAdmin() {
+
+      const email = prompt("Digite o e-mail do administrador:");
+      const senha = prompt("Digite a senha do administrador:");
+
+      if (!email || !senha) {
+        throw new Error("Login cancelado.");
+      }
+
+      await firebase.auth().signInWithEmailAndPassword(
+        email,
+        senha
+      );
     }
 
-    addLog("", "info");
-    addLog("▶ Enviando categorias...", "info");
 
-    for (const c of categorias) {
+    // ============================================================
+    // LOG
+    // ============================================================
+
+    const addLog = (msg, tipo = "ok") => {
+
+      const span = document.createElement("span");
+
+      span.className = tipo;
+      span.textContent = msg;
+
+      log.appendChild(span);
+      log.appendChild(document.createElement("br"));
+
+      log.scrollTop = log.scrollHeight;
+    };
+
+
+    // ============================================================
+    // ENVIO PARA FIREBASE
+    // ============================================================
+
+    btn.addEventListener("click", async () => {
+
+      btn.disabled = true;
+
+      log.innerHTML = "";
+
       try {
-        await db.collection("categorias").doc(c.id).set(c);
-        addLog(`✔ Categoria: ${c.nome}`, "ok");
+
+        // --------------------------------------------------------
+        // LOGIN
+        // --------------------------------------------------------
+
+        addLog("🔐 Autenticando administrador...", "info");
+
+        await autenticarAdmin();
+
+        addLog("✔ Administrador autenticado.", "ok");
+
+
+        // --------------------------------------------------------
+        // MARCAS
+        // --------------------------------------------------------
+
+        addLog("", "info");
+        addLog("▶ Enviando marcas...", "info");
+
+        let marcasOk = 0;
+        let marcasErro = 0;
+
+        for (const marca of marcas) {
+
+          try {
+
+            await db
+              .collection("marcas")
+              .doc(marca.id)
+              .set(marca);
+
+            addLog(
+              `✔ Marca: ${marca.nome}`,
+              "ok"
+            );
+
+            marcasOk++;
+
+          } catch (e) {
+
+            addLog(
+              `✘ Marca: ${marca.nome} — ${e.message}`,
+              "err"
+            );
+
+            marcasErro++;
+          }
+        }
+
+
+        // --------------------------------------------------------
+        // CATEGORIAS
+        // --------------------------------------------------------
+
+        addLog("", "info");
+        addLog("▶ Enviando categorias...", "info");
+
+        let categoriasOk = 0;
+        let categoriasErro = 0;
+
+        for (const categoria of categorias) {
+
+          try {
+
+            await db
+              .collection("categorias")
+              .doc(categoria.id)
+              .set(categoria);
+
+            addLog(
+              `✔ Categoria: ${categoria.nome}`,
+              "ok"
+            );
+
+            categoriasOk++;
+
+          } catch (e) {
+
+            addLog(
+              `✘ Categoria: ${categoria.nome} — ${e.message}`,
+              "err"
+            );
+
+            categoriasErro++;
+          }
+        }
+
+
+        // --------------------------------------------------------
+        // VEÍCULOS
+        // --------------------------------------------------------
+
+        addLog("", "info");
+        addLog("▶ Enviando estoque de veículos...", "info");
+
+        let veiculosOk = 0;
+        let veiculosErro = 0;
+
+        for (const p of produtos) {
+
+          try {
+
+            await db
+              .collection("produtos")
+              .doc(String(p.id))
+              .set({
+                ...p,
+
+                ativo: true,
+
+                criadoEm:
+                  firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+            addLog(
+              `✔ [${p.id}] ${p.marca} ${p.modelo}`,
+              "ok"
+            );
+
+            veiculosOk++;
+
+          } catch (e) {
+
+            addLog(
+              `✘ [${p.id}] ${p.nome} — ${e.message}`,
+              "err"
+            );
+
+            veiculosErro++;
+          }
+        }
+
+
+        // --------------------------------------------------------
+        // CUPONS
+        // --------------------------------------------------------
+
+        addLog("", "info");
+        addLog("▶ Enviando cupons...", "info");
+
+        let cuponsOk = 0;
+        let cuponsErro = 0;
+
+        for (const cupom of cupons) {
+
+          try {
+
+            await db
+              .collection("cupons")
+              .doc(cupom.codigo)
+              .set(cupom);
+
+            addLog(
+              `✔ Cupom: ${cupom.codigo}`,
+              "ok"
+            );
+
+            cuponsOk++;
+
+          } catch (e) {
+
+            addLog(
+              `✘ Cupom: ${cupom.codigo} — ${e.message}`,
+              "err"
+            );
+
+            cuponsErro++;
+          }
+        }
+
+
+        // --------------------------------------------------------
+        // RESUMO
+        // --------------------------------------------------------
+
+        const totalErros =
+          marcasErro +
+          categoriasErro +
+          veiculosErro +
+          cuponsErro;
+
+        addLog("", "info");
+
+        addLog(
+          "════════════════════════════════════",
+          "info"
+        );
+
+        addLog(
+          "🚗 PRIME MOTORS — DEMONSTRAÇÃO",
+          "info"
+        );
+
+        addLog(
+          `✔ ${veiculosOk} veículos cadastrados`,
+          "ok"
+        );
+
+        addLog(
+          `✔ ${marcasOk} marcas cadastradas`,
+          "ok"
+        );
+
+        addLog(
+          `✔ ${categoriasOk} categorias cadastradas`,
+          "ok"
+        );
+
+        addLog(
+          `✔ ${cuponsOk} cupom cadastrado`,
+          "ok"
+        );
+
+        addLog(
+          `⚠ ${totalErros} erro(s)`,
+          totalErros > 0 ? "err" : "ok"
+        );
+
+        addLog(
+          "════════════════════════════════════",
+          "info"
+        );
+
+        addLog(
+          "🚀 Seed concluído!",
+          totalErros > 0 ? "err" : "ok"
+        );
+
       } catch (e) {
-        addLog(`✘ Categoria: ${c.nome} — ${e.message}`, "err");
-        erros++;
+
+        addLog(
+          `✘ Erro: ${e.message}`,
+          "err"
+        );
+
       }
-    }
 
-    addLog("", "info");
-    addLog("▶ Enviando cupons...", "info");
+      btn.disabled = false;
 
-    for (const c of cupons) {
-      try {
-        await db.collection("cupons").doc(c.codigo).set(c);
-        addLog(`✔ Cupom: ${c.codigo}`, "ok");
-      } catch (e) {
-        addLog(`✘ Cupom: ${c.codigo} — ${e.message}`, "err");
-        erros++;
-      }
-    }
+    });
 
-    addLog("", "info");
-    addLog(
-      `━━━ CONCLUÍDO: ${ok} produtos enviados, ${erros} erros ━━━`,
-      erros > 0 ? "err" : "info"
-    );
+  </script>
 
-  } catch (e) {
-    addLog(`✘ Erro de autenticação: ${e.message}`, "err");
-  }
-
-  btn.disabled = false;
-});
-</script>
 </body>
+
 </html>
