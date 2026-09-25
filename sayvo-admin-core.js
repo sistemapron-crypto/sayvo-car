@@ -12,7 +12,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
-
+// <!-- TESTE SAYVO -->
 // ── AUTENTICAÇÃO E CONTROLE DE ACESSO ──────────────────────────────────────
 function fazerLogin() {
   const emailInput = document.getElementById("email-input");
