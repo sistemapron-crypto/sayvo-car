@@ -1251,6 +1251,132 @@ input#pdv-busca:focus {
   outline: none;
 }
 
+/* ── PDV / HIERARQUIA VISUAL DE PAGAMENTO ── */
+.pdv-pagamento2-area {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-sm);
+}
+
+.pdv-pagamento2-area.is-visible {
+  display: flex;
+}
+
+.pdv-pagamento2-area .form-group {
+  margin: 0;
+}
+
+.pdv-pagamento2-area label {
+  color: #1e3a8a;
+}
+
+#pdv-container-a-prazo {
+  display: none;
+  padding: 16px;
+  margin: 10px 0;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid var(--warning);
+  border-radius: var(--radius-sm);
+}
+
+#pdv-container-a-prazo.is-visible {
+  display: block;
+}
+
+#pdv-container-a-prazo .pdv-prazo-field {
+  margin-top: 10px;
+}
+
+#pdv-container-a-prazo .pdv-prazo-field:first-child {
+  margin-top: 0;
+}
+
+#pdv-container-a-prazo label {
+  color: #92400e;
+}
+
+#pdv-valor-entrada,
+#pdv-forma-entrada,
+#pdv-porcentagem-acrescimo,
+#pdv-qtd-parcelas {
+  border-color: #fcd34d;
+  background: #ffffff;
+}
+
+#pdv-valor-entrada:focus,
+#pdv-forma-entrada:focus,
+#pdv-porcentagem-acrescimo:focus,
+#pdv-qtd-parcelas:focus {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+#pdv-resumo-parcelamento {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #1e293b;
+}
+
+#pdv-resumo-parcelamento > div {
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+#pdv-resumo-parcelamento .pdv-parcela {
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.14);
+}
+
+.pdv-split-resumo {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-sm);
+}
+
+.pdv-split-resumo.is-visible {
+  display: flex;
+}
+
+.pdv-split-resumo .pdv-totals-row {
+  color: #166534;
+}
+
+.pdv-split-resumo .pdv-totals-row span:last-child {
+  color: #14532d;
+  font-weight: 800;
+}
+
+#pdv-pagamento {
+  background: #f8fafc;
+}
+
+#pdv-pagamento:focus {
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+}
+
+#pdv-pagamento-dividir + * {
+  color: var(--text-main);
+}
+
 /* ── CONTAS A RECEBER / FINANCEIRO ── */
 .cr-metrics-grid {
   display: grid;
@@ -2400,4 +2526,218 @@ aside#main-sidebar {
   min-width: 0 !important;
   box-sizing: border-box !important;
   display: block !important;
+}
+
+/* ── FINANCIAMENTO NO PDV ── */
+#pdv-container-financiamento {
+  display: none;
+  padding: 16px;
+  margin: 10px 0;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-left: 4px solid #2563eb;
+  border-radius: var(--radius-sm);
+}
+
+#pdv-container-financiamento .form-section-header {
+  margin-top: 0;
+  margin-bottom: 14px;
+  color: #1d4ed8;
+}
+
+#pdv-container-financiamento label {
+  color: #1e3a8a;
+}
+
+#pdv-container-financiamento input,
+#pdv-container-financiamento select,
+#pdv-container-financiamento textarea {
+  border-color: #93c5fd;
+  background: #ffffff;
+}
+
+#pdv-container-financiamento input:focus,
+#pdv-container-financiamento select:focus,
+#pdv-container-financiamento textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+#pdv-resumo-financiamento {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #1e293b;
+}
+
+#pdv-resumo-financiamento > div {
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+#pdv-resumo-financiamento .pdv-parcela {
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.14);
+}
+
+
+/* ── FINANCIAMENTOS ───────────────────────────────────────────────────── */
+.financiamentos-list-container {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.financiamento-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.financiamento-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.financiamento-label {
+  display: block;
+  color: var(--accent, #aeee02);
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 4px;
+}
+
+.financiamento-card h3 {
+  margin: 0;
+  color: var(--text-main, #0f172a);
+  font-size: 1rem;
+}
+
+.financiamento-card-header p {
+  margin: 4px 0 0;
+  color: var(--text-muted, #64748b);
+  font-size: .82rem;
+}
+
+.financiamento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.financiamento-grid > div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 11px 12px;
+}
+
+.financiamento-grid small {
+  display: block;
+  color: var(--text-muted, #64748b);
+  font-size: .7rem;
+  margin-bottom: 4px;
+}
+
+.financiamento-grid strong {
+  display: block;
+  color: var(--text-main, #0f172a);
+  font-size: .9rem;
+}
+
+.financiamento-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  color: var(--text-muted, #64748b);
+  font-size: .76rem;
+}
+
+.financiamento-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.financiamento-card.is-cancelado { opacity: .68; }
+
+@media (max-width: 700px) {
+  .financiamento-card { padding: 14px; }
+  .financiamento-card-header { flex-direction: column; gap: 10px; }
+  .financiamento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+
+@media (max-width: 420px) {
+  .financiamento-grid { grid-template-columns: 1fr; }
+}
+
+/* Parcelas e vencimentos - Financeiro / Cobrança */
+.conta-parcelas-detalhes {
+  margin: 12px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  overflow: hidden;
+}
+
+.conta-parcelas-detalhes summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.conta-parcelas-detalhes summary::-webkit-details-marker { display: none; }
+.conta-parcelas-detalhes summary::after {
+  content: "▾";
+  margin-left: auto;
+  color: var(--text-muted);
+}
+.conta-parcelas-detalhes[open] summary::after { content: "▴"; }
+
+.conta-parcelas-lista {
+  border-top: 1px solid var(--border);
+}
+
+.conta-parcela-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: .8rem;
+}
+.conta-parcela-row:last-child { border-bottom: 0; }
+.conta-parcela-row span { display: flex; flex-direction: column; gap: 2px; }
+.conta-parcela-row span:last-child { text-align: right; }
+.conta-parcela-row small { color: var(--text-muted); font-size: .72rem; }
+.conta-parcela-row.em_aberto strong:last-child,
+.conta-parcela-row.parcial strong:last-child { color: var(--danger); }
+.conta-parcela-row.paga { opacity: .72; }
+.conta-parcela-row.paga strong { color: var(--success); }
+
+@media (max-width: 640px) {
+  .conta-parcela-row { padding: 9px 10px; }
 }

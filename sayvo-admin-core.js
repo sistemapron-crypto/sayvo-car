@@ -134,6 +134,7 @@ const PAG_LABEL = {
   pix: "Pix",
   debito: "Cartão Débito",
   credito: "Cartão Crédito",
+  financiamento: "Financiamento",
   prazo: "A Prazo"
 };
 
@@ -214,6 +215,7 @@ function mudarTab(tab, btn) {
     carregarRelatorio();
   }
   if (tab === "contas-a-receber") carregarContasAReceber();
+  if (tab === "financiamentos") carregarFinanciamentos();
 }
 
 function mesAtualStr() {
@@ -1158,8 +1160,19 @@ function pdvLimparCarrinho() {
   if (document.getElementById("pdv-desconto-manual")) document.getElementById("pdv-desconto-manual").value = "";
   if (document.getElementById("pdv-cliente")) document.getElementById("pdv-cliente").value = "";
   if (document.getElementById("pdv-cliente-telefone")) document.getElementById("pdv-cliente-telefone").value = "";
+  if (document.getElementById("pdv-valor-entrada")) document.getElementById("pdv-valor-entrada").value = "0";
+  if (document.getElementById("pdv-forma-entrada")) document.getElementById("pdv-forma-entrada").value = "pix";
   if (document.getElementById("pdv-porcentagem-acrescimo")) document.getElementById("pdv-porcentagem-acrescimo").value = "0";
   if (document.getElementById("pdv-qtd-parcelas")) document.getElementById("pdv-qtd-parcelas").value = "1";
+  const primeiroVencimento = document.getElementById("pdv-primeiro-vencimento");
+  if (primeiroVencimento) primeiroVencimento.value = dataPrimeiroVencimentoPadrao();
+  if (document.getElementById("pdv-financiamento-financeira")) document.getElementById("pdv-financiamento-financeira").value = "";
+  if (document.getElementById("pdv-financiamento-entrada")) document.getElementById("pdv-financiamento-entrada").value = "0";
+  if (document.getElementById("pdv-financiamento-forma-entrada")) document.getElementById("pdv-financiamento-forma-entrada").value = "pix";
+  if (document.getElementById("pdv-financiamento-juros")) document.getElementById("pdv-financiamento-juros").value = "0";
+  if (document.getElementById("pdv-financiamento-parcelas")) document.getElementById("pdv-financiamento-parcelas").value = "48";
+  if (document.getElementById("pdv-financiamento-valor-parcela")) document.getElementById("pdv-financiamento-valor-parcela").value = "";
+  if (document.getElementById("pdv-financiamento-observacoes")) document.getElementById("pdv-financiamento-observacoes").value = "";
 
   const pag = document.getElementById("pdv-pagamento");
   if (pag) pag.value = "dinheiro";
@@ -1185,15 +1198,31 @@ function pdvTogglePagamentoDividido() {
 function toggleOpcoesAPrazo() {
   const pgto1 = document.getElementById("pdv-pagamento")?.value;
   const dividir = document.getElementById("pdv-pagamento-dividir")?.checked;
-  const pgto2 = document.getElementById("pdv-pagamento2") ? document.getElementById("pdv-pagamento2").value : "";
-  const container = document.getElementById("pdv-container-a-prazo");
+  const pgto2 = document.getElementById("pdv-pagamento2")?.value || "";
+  const containerPrazo = document.getElementById("pdv-container-a-prazo");
+  const containerFinanciamento = document.getElementById("pdv-container-financiamento");
 
-  if (!container) return;
-  if (pgto1 === "prazo" || (dividir && pgto2 === "prazo")) {
-    container.style.display = "block";
-    calcularSimulacaoParcelas();
-  } else {
-    container.style.display = "none";
+  const possuiPrazo = pgto1 === "prazo" || (dividir && pgto2 === "prazo");
+  const possuiFinanciamento = pgto1 === "financiamento" || (dividir && pgto2 === "financiamento");
+
+  if (containerPrazo) {
+    containerPrazo.style.display = possuiPrazo ? "block" : "none";
+  }
+
+  if (containerFinanciamento) {
+    containerFinanciamento.style.display = possuiFinanciamento ? "block" : "none";
+  }
+
+  if (possuiPrazo) calcularSimulacaoParcelas();
+  if (possuiFinanciamento) calcularResumoFinanciamento();
+
+  if (!possuiPrazo) {
+    const resumo = document.getElementById("pdv-resumo-parcelamento");
+    if (resumo) resumo.innerHTML = "";
+  }
+  if (!possuiFinanciamento) {
+    const resumo = document.getElementById("pdv-resumo-financiamento");
+    if (resumo) resumo.innerHTML = "";
   }
 }
 
@@ -1234,6 +1263,58 @@ function pdvCalcularValorAPrazo(total, pagamentos) {
   return total;
 }
 
+function pdvObterDadosEntradaAPrazo(total) {
+  const valorEntrada = Math.max(
+    0,
+    Math.min(
+      parseFloat(document.getElementById("pdv-valor-entrada")?.value) || 0,
+      total
+    )
+  );
+
+  const formaEntrada =
+    document.getElementById("pdv-forma-entrada")?.value || "pix";
+
+  return {
+    valorEntrada,
+    formaEntrada,
+    saldoPrincipal: Math.max(0, total - valorEntrada)
+  };
+}
+
+function calcularResumoFinanciamento() {
+  const resEl = document.getElementById("pdv-resumo-financiamento");
+  if (!resEl) return;
+
+  const total = pdvCalcularSubtotal() - pdvCalcularDesconto(pdvCalcularSubtotal());
+  const entrada = Math.max(0, Math.min(parseFloat(document.getElementById("pdv-financiamento-entrada")?.value) || 0, total));
+  const financiado = Math.max(0, total - entrada);
+  const financeira = document.getElementById("pdv-financiamento-financeira")?.value.trim() || "Não informada";
+  const juros = parseFloat(document.getElementById("pdv-financiamento-juros")?.value) || 0;
+  const parcelas = parseInt(document.getElementById("pdv-financiamento-parcelas")?.value) || 1;
+  const valorParcela = parseFloat(document.getElementById("pdv-financiamento-valor-parcela")?.value) || 0;
+  const formaEntrada = document.getElementById("pdv-financiamento-forma-entrada")?.value || "pix";
+  const formaEntradaLabel = PAG_LABEL[formaEntrada] || formaEntrada;
+
+  if (total <= 0) {
+    resEl.innerHTML = "";
+    return;
+  }
+
+  resEl.innerHTML = `
+    <div>Valor do veículo: <strong>${formatarMoeda(total)}</strong></div>
+    <div>Entrada: <strong>${formatarMoeda(entrada)}</strong> — ${formaEntradaLabel}</div>
+    <div>Valor financiado: <strong>${formatarMoeda(financiado)}</strong></div>
+    <div>Financeira: <strong>${financeira}</strong></div>
+    ${juros > 0 ? `<div>Juros: <strong>${juros.toFixed(2).replace(".", ",")}% a.m.</strong></div>` : ""}
+    ${valorParcela > 0 ? `<div class="pdv-parcela">${parcelas}x de ${formatarMoeda(valorParcela)}</div>` : `<div class="pdv-parcela">Informe o valor da parcela</div>`}
+  `;
+}
+
+function dividirPagamentoAtual() {
+  return !!document.getElementById("pdv-pagamento-dividir")?.checked;
+}
+
 async function pdvFinalizarVenda() {
 
   if (!pdvCarrinho.length) {
@@ -1244,7 +1325,7 @@ async function pdvFinalizarVenda() {
   const subtotal = pdvCalcularSubtotal();
   const desconto = pdvCalcularDesconto(subtotal);
   const totalOriginal = subtotal - desconto;
-  const pagamentos = pdvCalcularPagamentos(totalOriginal);
+  let pagamentos = pdvCalcularPagamentos(totalOriginal);
 
   const cliente = document.getElementById("pdv-cliente")?.value.trim();
   const telefone = document.getElementById("pdv-cliente-telefone")?.value.trim() || null;
@@ -1258,21 +1339,35 @@ async function pdvFinalizarVenda() {
   }
 
   const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
+  const possuiFinanciamento = pagamentos.some(p => p.forma === "financiamento");
 
-  if (possuiAPrazo && !cliente) {
-    toast("Informe o nome do cliente para venda a prazo.", "err");
+  if ((possuiAPrazo || possuiFinanciamento) && !cliente) {
+    toast(possuiFinanciamento ? "Informe o nome do comprador para registrar o financiamento." : "Informe o nome do cliente para venda a prazo.", "err");
+    return;
+  }
+
+  if (possuiFinanciamento && dividirPagamentoAtual()) {
+    toast("O financiamento deve ser registrado pela opção de financiamento, sem dividir a forma de pagamento.", "err");
     return;
   }
 
   let dadosPrazo = null;
+  let dadosFinanciamento = null;
+  const primeiroVencimento = document.getElementById("pdv-primeiro-vencimento")?.value || dataPrimeiroVencimentoPadrao();
   let totalFinalVenda = totalOriginal;
+  let valorEntrada = 0;
+  let formaEntrada = null;
 
   if (possuiAPrazo) {
 
-    const valorBaseAPrazo = pdvCalcularValorAPrazo(
-      totalOriginal,
-      pagamentos
-    );
+    // Quando existe venda a prazo, a entrada passa a ser controlada
+    // pelos campos próprios do parcelamento. Isso evita duplicidade
+    // com o recurso genérico de divisão de pagamento.
+    const dadosEntrada = pdvObterDadosEntradaAPrazo(totalOriginal);
+    valorEntrada = dadosEntrada.valorEntrada;
+    formaEntrada = dadosEntrada.formaEntrada;
+
+    const saldoPrincipal = dadosEntrada.saldoPrincipal;
 
     const acrescimoPct =
       parseFloat(
@@ -1284,27 +1379,83 @@ async function pdvFinalizarVenda() {
         document.getElementById("pdv-qtd-parcelas")?.value
       ) || 1;
 
-    const valorJuros =
-      valorBaseAPrazo * (acrescimoPct / 100);
+    const valorJuros = saldoPrincipal * (acrescimoPct / 100);
+    const valorTotalPrazoComJuros = saldoPrincipal + valorJuros;
+    const valorParcela = qtdParcelas > 0
+      ? valorTotalPrazoComJuros / qtdParcelas
+      : valorTotalPrazoComJuros;
 
-    const valorTotalPrazoComJuros =
-      valorBaseAPrazo + valorJuros;
+    totalFinalVenda = valorEntrada + valorTotalPrazoComJuros;
 
-    const valorParcela =
-      valorTotalPrazoComJuros / qtdParcelas;
+    // A venda registra separadamente o que foi recebido agora
+    // e o que ficou pendente.
+    pagamentos = [];
 
-    totalFinalVenda =
-      (totalOriginal - valorBaseAPrazo) +
-      valorTotalPrazoComJuros;
+    if (valorEntrada > 0) {
+      pagamentos.push({
+        forma: formaEntrada,
+        valor: valorEntrada
+      });
+    }
+
+    pagamentos.push({
+      forma: "prazo",
+      valor: valorTotalPrazoComJuros
+    });
 
     dadosPrazo = {
-      valorBase: valorBaseAPrazo,
+      valorBase: saldoPrincipal,
+      valorEntrada,
+      formaEntrada,
+      saldoPrincipal,
       acrescimoPct,
       valorJuros,
       valorTotalPrazoComJuros,
       qtdParcelas,
-      valorParcela
+      valorParcela,
+      primeiroVencimento,
+      parcelas: gerarParcelasFinanceiras(valorTotalPrazoComJuros, qtdParcelas, primeiroVencimento, 0)
     };
+  }
+
+  if (possuiFinanciamento) {
+    const financeira = document.getElementById("pdv-financiamento-financeira")?.value.trim();
+    const entradaFin = Math.max(0, Math.min(parseFloat(document.getElementById("pdv-financiamento-entrada")?.value) || 0, totalOriginal));
+    const financiado = Math.max(0, totalOriginal - entradaFin);
+    const formaEntradaFin = document.getElementById("pdv-financiamento-forma-entrada")?.value || "pix";
+    const jurosFin = parseFloat(document.getElementById("pdv-financiamento-juros")?.value) || 0;
+    const qtdParcelasFin = parseInt(document.getElementById("pdv-financiamento-parcelas")?.value) || 1;
+    const valorParcelaFin = parseFloat(document.getElementById("pdv-financiamento-valor-parcela")?.value) || 0;
+    const observacoesFin = document.getElementById("pdv-financiamento-observacoes")?.value.trim() || "";
+
+    if (!financeira) {
+      toast("Informe o banco ou a financeira.", "err");
+      return;
+    }
+    if (entradaFin >= totalOriginal) {
+      toast("O valor financiado precisa ser maior que zero.", "err");
+      return;
+    }
+    if (valorParcelaFin <= 0) {
+      toast("Informe o valor da parcela informado pela financeira.", "err");
+      return;
+    }
+
+    dadosFinanciamento = {
+      financeira,
+      valorVeiculo: totalOriginal,
+      valorEntrada: entradaFin,
+      formaEntrada: formaEntradaFin,
+      formaEntradaLabel: PAG_LABEL[formaEntradaFin] || formaEntradaFin,
+      valorFinanciado: financiado,
+      jurosPct: jurosFin,
+      qtdParcelas: qtdParcelasFin,
+      valorParcela: valorParcelaFin,
+      observacoes: observacoesFin
+    };
+
+    pagamentos = [{ forma: "financiamento", valor: totalOriginal }];
+    totalFinalVenda = totalOriginal;
   }
 
   const venda = {
@@ -1328,7 +1479,14 @@ async function pdvFinalizarVenda() {
     cliente: cliente || null,
     telefone,
 
+    entrada: possuiAPrazo ? {
+      valor: valorEntrada,
+      forma: formaEntrada,
+      formaLabel: PAG_LABEL[formaEntrada] || formaEntrada
+    } : null,
+
     prazoDetalhes: dadosPrazo,
+    financiamento: dadosFinanciamento,
 
     cupom: pdvCupomAplicado
       ? pdvCupomAplicado.codigo
@@ -1345,6 +1503,8 @@ async function pdvFinalizarVenda() {
 
     if (possuiAPrazo && dadosPrazo) {
 
+      // O financeiro registra somente o saldo que ficou pendente.
+      // A entrada já foi recebida no momento da venda.
       await db.collection("contasAReceber").add({
 
         vendaId: refDoc.id,
@@ -1353,8 +1513,13 @@ async function pdvFinalizarVenda() {
         cliente: cliente,
         telefoneCliente: telefone || null,
 
+        valorEntrada: dadosPrazo.valorEntrada,
+        formaEntrada: dadosPrazo.formaEntrada,
+        formaEntradaLabel:
+          PAG_LABEL[dadosPrazo.formaEntrada] || dadosPrazo.formaEntrada,
+
         valorOriginal:
-          dadosPrazo.valorTotalPrazoComJuros,
+          dadosPrazo.valorBase,
 
         totalAReceber:
           dadosPrazo.valorTotalPrazoComJuros,
@@ -1369,6 +1534,18 @@ async function pdvFinalizarVenda() {
 
         valorParcela:
           dadosPrazo.valorParcela,
+
+        primeiroVencimento:
+          dadosPrazo.primeiroVencimento,
+
+        parcelas:
+          dadosPrazo.parcelas,
+
+        valorJuros:
+          dadosPrazo.valorJuros,
+
+        acrescimoPct:
+          dadosPrazo.acrescimoPct,
 
         statusVenda: "em_aberto",
 
@@ -1404,6 +1581,10 @@ async function pdvFinalizarVenda() {
     await carregarProdutos();
     await carregarVendasHoje();
     await carregarContasAReceber();
+    if (possuiFinanciamento) {
+      // Atualiza a aba em segundo plano; uma falha nessa consulta não pode impedir a venda.
+      carregarFinanciamentos().catch(err => console.warn("Falha ao atualizar financiamentos:", err));
+    }
 
     atualizarDashboard();
 
@@ -1418,33 +1599,119 @@ async function pdvFinalizarVenda() {
   }
 }
 
+function dataPrimeiroVencimentoPadrao() {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function adicionarMesesDataISO(dataISO, meses) {
+  const [ano, mes, dia] = String(dataISO || dataPrimeiroVencimentoPadrao()).split("-").map(Number);
+  const d = new Date(ano, (mes || 1) - 1, dia || 1);
+  d.setMonth(d.getMonth() + meses);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function formatarDataParcela(dataISO) {
+  if (!dataISO) return "Sem vencimento";
+  const [ano, mes, dia] = String(dataISO).split("-");
+  if (!ano || !mes || !dia) return dataISO;
+  return `${dia}/${mes}/${ano}`;
+}
+
+function gerarParcelasFinanceiras(valorTotal, qtdParcelas, primeiroVencimento, totalPagoInicial = 0) {
+  const qtd = Math.max(1, parseInt(qtdParcelas) || 1);
+  const valorBase = Number(valorTotal) || 0;
+  const valorParcelaBase = qtd > 0 ? valorBase / qtd : valorBase;
+  let restantePago = Math.max(0, Number(totalPagoInicial) || 0);
+
+  return Array.from({ length: qtd }, (_, index) => {
+    const valor = index === qtd - 1
+      ? Math.max(0, valorBase - valorParcelaBase * (qtd - 1))
+      : valorParcelaBase;
+    const pago = Math.min(valor, restantePago);
+    restantePago = Math.max(0, restantePago - pago);
+    const saldo = Math.max(0, valor - pago);
+    return {
+      numero: index + 1,
+      valor: Number(valor.toFixed(2)),
+      vencimento: adicionarMesesDataISO(primeiroVencimento || dataPrimeiroVencimentoPadrao(), index),
+      pago: Number(pago.toFixed(2)),
+      saldo: Number(saldo.toFixed(2)),
+      status: saldo <= 0.009 ? "paga" : (pago > 0 ? "parcial" : "em_aberto")
+    };
+  });
+}
+
+function obterParcelasConta(conta) {
+  if (Array.isArray(conta.parcelas) && conta.parcelas.length) return conta.parcelas;
+  const total = Number(conta.totalAReceber || conta.valorOriginal || 0);
+  let primeiroVencimento = conta.primeiroVencimento || null;
+
+  if (!primeiroVencimento && conta.criadoEm) {
+    const base = conta.criadoEm.toDate ? conta.criadoEm.toDate() : new Date(conta.criadoEm);
+    if (!Number.isNaN(base.getTime())) {
+      base.setDate(base.getDate() + 30);
+      primeiroVencimento = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
+    }
+  }
+
+  return gerarParcelasFinanceiras(
+    total,
+    conta.qtdParcelas || 1,
+    primeiroVencimento || dataPrimeiroVencimentoPadrao(),
+    conta.totalPago || 0
+  );
+}
+
+function renderizarListaParcelasConta(parcelas) {
+  if (!parcelas?.length) return "";
+  const linhas = parcelas.map(parcela => {
+    const status = parcela.saldo <= 0.009 ? "paga" : (parcela.pago > 0 ? "parcial" : "em_aberto");
+    const statusLabel = status === "paga" ? "Paga" : (status === "parcial" ? "Parcial" : "Em aberto");
+    const saldo = Number(parcela.saldo ?? Math.max(0, (parcela.valor || 0) - (parcela.pago || 0)));
+    return `<div class="conta-parcela-row ${status}">
+      <span><strong>${parcela.numero}ª parcela</strong><small>Venc. ${formatarDataParcela(parcela.vencimento)}</small></span>
+      <span><strong>${formatarMoeda(parcela.valor || 0)}</strong><small>${statusLabel}${saldo > 0.009 ? ` · Falta ${formatarMoeda(saldo)}` : ""}</small></span>
+    </div>`;
+  }).join("");
+  return `<details class="conta-parcelas-detalhes"><summary><i class="fa-regular fa-calendar"></i> Ver parcelas e vencimentos (${parcelas.length})</summary><div class="conta-parcelas-lista">${linhas}</div></details>`;
+}
+
 function calcularSimulacaoParcelas() {
   const subtotal = pdvCalcularSubtotal();
   const desconto = pdvCalcularDesconto(subtotal);
   const totalGeral = subtotal - desconto;
   const pagamentos = pdvCalcularPagamentos(totalGeral);
+  const possuiAPrazo = pagamentos.some(p => p.forma === "prazo");
+  const resEl = document.getElementById("pdv-resumo-parcelamento");
 
-  const valorBaseAPrazo = pdvCalcularValorAPrazo(totalGeral, pagamentos);
+  if (!resEl) return;
+
+  if (!possuiAPrazo) {
+    resEl.innerHTML = "";
+    return;
+  }
+
+  const dadosEntrada = pdvObterDadosEntradaAPrazo(totalGeral);
   const acrescimoPct = parseFloat(document.getElementById("pdv-porcentagem-acrescimo")?.value) || 0;
   const qtdParcelas = parseInt(document.getElementById("pdv-qtd-parcelas")?.value) || 1;
+  const primeiroVencimento = document.getElementById("pdv-primeiro-vencimento")?.value || dataPrimeiroVencimentoPadrao();
+  const valorJuros = dadosEntrada.saldoPrincipal * (acrescimoPct / 100);
+  const valorTotalAPrazo = dadosEntrada.saldoPrincipal + valorJuros;
+  const valorParcela = qtdParcelas > 0 ? valorTotalAPrazo / qtdParcelas : valorTotalAPrazo;
+  const formaEntradaLabel = PAG_LABEL[dadosEntrada.formaEntrada] || dadosEntrada.formaEntrada;
 
-  const valorJuros = valorBaseAPrazo * (acrescimoPct / 100);
-  const valorTotalAPrazo = valorBaseAPrazo + valorJuros;
-  const valorParcela = valorTotalAPrazo / qtdParcelas;
-
-  const resEl = document.getElementById("pdv-resumo-parcelamento");
-  if (resEl) {
-    if (acrescimoPct > 0) {
-      resEl.innerHTML = `
-        <div>Valor a prazo original: ${formatarMoeda(valorBaseAPrazo)}</div>
-        <div>Com acréscimo (${acrescimoPct}%): ${formatarMoeda(valorTotalAPrazo)}</div>
-        <div style="font-size:1.1rem;color:var(--text-main);margin-top:4px;">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>
-      `;
-    } else {
-      resEl.innerHTML = `<div style="font-size:1.1rem;color:var(--text-main);">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>`;
-    }
-  }
+  resEl.innerHTML = `
+    <div>Valor total da venda: ${formatarMoeda(totalGeral)}</div>
+    <div>Entrada: ${formatarMoeda(dadosEntrada.valorEntrada)} — ${formaEntradaLabel}</div>
+    <div>Saldo para parcelar: ${formatarMoeda(dadosEntrada.saldoPrincipal)}</div>
+    ${acrescimoPct > 0 ? `<div>Com acréscimo (${acrescimoPct}%): ${formatarMoeda(valorTotalAPrazo)}</div>` : `<div>Total parcelado: ${formatarMoeda(valorTotalAPrazo)}</div>`}
+    <div class="pdv-parcela">${qtdParcelas}x de ${formatarMoeda(valorParcela)}</div>
+    <div>1º vencimento: <strong>${formatarDataParcela(primeiroVencimento)}</strong></div>
+  `;
 }
+
 
 function renderPdvCart() {
   const cont = document.getElementById("pdv-cart-items");
@@ -1740,6 +2007,91 @@ function renderRelatorio() {
   tbody.innerHTML = vendasRelatorio.map(v => linhaVenda(v, "relatorio", true)).join("");
 }
 
+// ── FINANCIAMENTOS ───────────────────────────────────────────────────────────
+async function carregarFinanciamentos() {
+  const cont = document.getElementById("financiamentos-list-container");
+  if (!cont) return;
+
+  cont.innerHTML = '<div class="loader"><i class="fa-solid fa-spinner"></i> Carregando financiamentos...</div>';
+
+  try {
+    // Financiamentos usam a própria coleção de vendas como fonte de verdade.
+    // Não criamos uma coleção separada, evitando duplicação e novas regras de permissão.
+    const vendasSnap = await db.collection("vendas").get();
+
+    const lista = vendasSnap.docs
+      .map(d => ({ docId: d.id, ...d.data() }))
+      .filter(v => v.financiamento && v.status !== "cancelada")
+      .sort((a, b) => {
+        const da = a.criadoEm?.toDate ? a.criadoEm.toDate().getTime() : 0;
+        const db = b.criadoEm?.toDate ? b.criadoEm.toDate().getTime() : 0;
+        return db - da;
+      })
+      .map(v => ({
+        docId: v.docId,
+        vendaId: v.docId,
+        cliente: v.cliente,
+        telefoneCliente: v.telefone,
+        itens: v.itens,
+        valorVenda: v.financiamento.valorVeiculo ?? v.total ?? 0,
+        valorEntrada: v.financiamento.valorEntrada ?? 0,
+        formaEntrada: v.financiamento.formaEntrada,
+        formaEntradaLabel: v.financiamento.formaEntradaLabel,
+        valorFinanciado: v.financiamento.valorFinanciado ?? 0,
+        financeira: v.financiamento.financeira,
+        jurosPct: v.financiamento.jurosPct ?? 0,
+        qtdParcelas: v.financiamento.qtdParcelas ?? 0,
+        valorParcela: v.financiamento.valorParcela ?? 0,
+        observacoes: v.financiamento.observacoes,
+        criadoEm: v.criadoEm,
+        status: "registrado"
+      }));
+
+    if (!lista.length) {
+      cont.innerHTML = '<div class="empty-state" style="margin-top:20px;"><i class="fa-solid fa-building-columns"></i><p>Nenhum financiamento registrado ainda.</p></div>';
+      return;
+    }
+
+    cont.innerHTML = lista.map(fin => {
+      const veiculo = Array.isArray(fin.itens) && fin.itens.length
+        ? fin.itens.map(i => i.nome).join(", ")
+        : "Veículo não informado";
+      const data = fin.criadoEm?.toDate
+        ? fin.criadoEm.toDate().toLocaleDateString("pt-BR")
+        : "—";
+
+      return `<div class="financiamento-card">
+        <div class="financiamento-card-header">
+          <div>
+            <span class="financiamento-label">Financiamento registrado</span>
+            <h3>${fin.cliente || "Cliente não informado"}</h3>
+            <p>${veiculo}</p>
+          </div>
+          <span class="status-badge quitada">Registrado</span>
+        </div>
+
+        <div class="financiamento-grid">
+          <div><small>Valor da venda</small><strong>${formatarMoeda(fin.valorVenda)}</strong></div>
+          <div><small>Entrada</small><strong>${formatarMoeda(fin.valorEntrada)}${fin.formaEntradaLabel ? ` · ${fin.formaEntradaLabel}` : ""}</strong></div>
+          <div><small>Valor financiado</small><strong>${formatarMoeda(fin.valorFinanciado)}</strong></div>
+          <div><small>Financeira</small><strong>${fin.financeira || "—"}</strong></div>
+          <div><small>Parcelas</small><strong>${fin.qtdParcelas || 0}x</strong></div>
+          <div><small>Valor da parcela</small><strong>${formatarMoeda(fin.valorParcela)}</strong></div>
+        </div>
+
+        <div class="financiamento-footer">
+          <span><i class="fa-regular fa-calendar"></i> ${data}</span>
+          ${Number(fin.jurosPct) > 0 ? `<span><i class="fa-solid fa-percent"></i> ${Number(fin.jurosPct).toFixed(2).replace(".", ",")}% a.m.</span>` : ""}
+          ${fin.observacoes ? `<span><i class="fa-regular fa-note-sticky"></i> ${fin.observacoes}</span>` : ""}
+        </div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    console.error("Erro ao carregar financiamentos:", e);
+    cont.innerHTML = '<div class="empty-state" style="margin-top:20px;"><i class="fa-solid fa-triangle-exclamation"></i><p>Não foi possível carregar os financiamentos.</p></div>';
+  }
+}
+
 // ── CONTAS A RECEBER / FINANCEIRO ─────────────────────────────────────────────
 function ativarAbaContasAReceber(btn) {
   mudarTab('contas-a-receber', btn);
@@ -1769,28 +2121,32 @@ function enviarMensagemWhatsApp(docId) {
 
   const cliente = conta.cliente || "Cliente";
   const idPedido = conta.pedidoId || conta.vendaId || conta.docId.substring(0, 6);
-  const valTotalNum = conta.valorOriginal || conta.totalAReceber || 0;
+  const valTotalNum = Number(conta.valorOriginal || conta.totalAReceber || 0);
   const valTotal = formatarMoeda(valTotalNum);
   const valPago = formatarMoeda(conta.totalPago || 0);
-  const saldoRestante = formatarMoeda(conta.saldoRestante !== undefined ? conta.saldoRestante : 0);
-  const qtdParcelas = parseInt(conta.qtdParcelas) || 1;
+  const saldoNum = Number(conta.saldoRestante !== undefined ? conta.saldoRestante : Math.max(0, valTotalNum - (conta.totalPago || 0)));
+  const saldoRestante = formatarMoeda(saldoNum);
+  const parcelas = obterParcelasConta(conta);
+  const parcelasAbertas = parcelas.filter(p => Number(p.saldo ?? 0) > 0.009);
 
   let textoParcelas = "";
-  if (qtdParcelas > 1) {
-    const valorParcela = formatarMoeda(valTotalNum / qtdParcelas);
-    textoParcelas = `\n📌 *Condições:* ${qtdParcelas}x de ${valorParcela}`;
-  } else {
-    textoParcelas = `\n📌 *Condições:* Parcela única / À vista`;
+  if (parcelas.length) {
+    textoParcelas = "\n📅 *Parcelas em aberto:*\n" + parcelasAbertas.map(p => {
+      const saldoParcela = Number(p.saldo ?? Math.max(0, (p.valor || 0) - (p.pago || 0)));
+      const status = Number(p.pago || 0) > 0 ? "Parcial" : "Em aberto";
+      return `• ${p.numero}ª parcela — ${formatarDataParcela(p.vencimento)} — ${formatarMoeda(saldoParcela)} (${status})`;
+    }).join("\n");
+    if (!parcelasAbertas.length) textoParcelas = "\n✅ *Parcelas:* Todas quitadas.";
   }
 
   const msg = `Olá, *${cliente}*! Tudo bem? 🚗\n\n` +
     `Aqui é da revenda de veículos. Segue o resumo financeiro da sua negociação:\n\n` +
     `📄 *Contrato/Ref:* #${idPedido}\n` +
-    `💰 *Valor Total:* ${valTotal}` +
-    `${textoParcelas}\n` +
+    `💰 *Valor Total:* ${valTotal}\n` +
     `✅ *Total Pago:* ${valPago}\n` +
-    `⚠️ *Saldo Devedor:* ${saldoRestante}\n\n` +
-    `Estamos à sua inteira disposição para qualquer esclarecimento ou envio de chave PIX. Um abraço!`;
+    `⚠️ *Saldo Devedor:* ${saldoRestante}\n` +
+    `${textoParcelas}\n\n` +
+    `Estamos à sua disposição para qualquer esclarecimento ou envio de chave PIX. Um abraço!`;
 
   window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, "_blank");
 }
@@ -1855,9 +2211,11 @@ function renderizarContasAReceber() {
     const idPedidoInfo = (conta.pedidoId || conta.vendaId) ? `<div style="font-size:0.75rem;color:var(--text-muted);">Ref/Pedido: #${conta.pedidoId || conta.vendaId}</div>` : '';
 
     const valorPorParcela = valOriginal / qtdParcelas;
+    const parcelasConta = obterParcelasConta(conta);
     const detalheParcelamento = qtdParcelas > 1
       ? `<div style="font-size:0.82rem;font-weight:600;color:var(--text-main);">${qtdParcelas}x de ${formatarMoeda(valorPorParcela)}</div>`
       : '';
+    const detalheParcelas = renderizarListaParcelasConta(parcelasConta);
 
     return `
       <div class="conta-card">
@@ -1872,6 +2230,7 @@ function renderizarContasAReceber() {
         ${idPedidoInfo}
         ${descricaoInfo}
         ${detalheParcelamento}
+        ${detalheParcelas}
 
         <div class="conta-progress-bar" title="${pctPago}% pago">
           <div class="conta-progress-fill" style="width: ${pctPago}%;"></div>
@@ -1927,6 +2286,8 @@ function abrirModalCriarContaManual() {
 
   const elParcelas = document.getElementById("conta-a-receber-parcelas");
   if (elParcelas) elParcelas.value = "1";
+  const elPrimeiroVencimento = document.getElementById("conta-a-receber-primeiro-vencimento");
+  if (elPrimeiroVencimento) elPrimeiroVencimento.value = dataPrimeiroVencimentoPadrao();
 
   document.getElementById("conta-a-receber-descricao").value = "";
   abrirModal("modal-conta-a-receber");
@@ -1945,6 +2306,8 @@ function abrirModalEditarContaAReceber(docId) {
 
   const elParcelas = document.getElementById("conta-a-receber-parcelas");
   if (elParcelas) elParcelas.value = conta.qtdParcelas || 1;
+  const elPrimeiroVencimento = document.getElementById("conta-a-receber-primeiro-vencimento");
+  if (elPrimeiroVencimento) elPrimeiroVencimento.value = conta.primeiroVencimento || dataPrimeiroVencimentoPadrao();
 
   document.getElementById("conta-a-receber-descricao").value = conta.descricao || "";
   abrirModal("modal-conta-a-receber");
@@ -1958,6 +2321,7 @@ async function salvarContaAReceber() {
   const valorPago = parseFloat(document.getElementById("conta-a-receber-valor-pago").value) || 0;
   const elParcelas = document.getElementById("conta-a-receber-parcelas");
   const qtdParcelas = elParcelas ? (parseInt(elParcelas.value) || 1) : 1;
+  const primeiroVencimento = document.getElementById("conta-a-receber-primeiro-vencimento")?.value || dataPrimeiroVencimentoPadrao();
   const descricao = document.getElementById("conta-a-receber-descricao").value.trim();
 
   if (!cliente) { toast("O nome do cliente é obrigatório.", "err"); return; }
@@ -1979,6 +2343,8 @@ async function salvarContaAReceber() {
     saldoRestante,
     statusVenda,
     qtdParcelas,
+    primeiroVencimento,
+    parcelas: gerarParcelasFinanceiras(valorOriginal, qtdParcelas, primeiroVencimento, valorPago),
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
 
@@ -2010,6 +2376,13 @@ function abrirModalPagarContaAReceber(docId) {
   document.getElementById("pagar-conta-a-receber-telefone").textContent = conta.telefoneCliente || 'Não informado';
   document.getElementById("pagar-conta-a-receber-valor-total").textContent = formatarMoeda(conta.totalAReceber || conta.valorOriginal || 0);
   document.getElementById("pagar-conta-a-receber-valor-pendente").textContent = formatarMoeda(conta.saldoRestante);
+  const parcelasEl = document.getElementById("pagar-conta-a-receber-parcelas");
+  if (parcelasEl) {
+    const parcelas = obterParcelasConta(conta);
+    const abertas = parcelas.filter(p => Number(p.saldo ?? 0) > 0.009);
+    parcelasEl.innerHTML = `<div style="padding:10px 12px; font-size:.82rem; font-weight:700; color:var(--text-main);">Parcelas em aberto</div>` +
+      (abertas.length ? abertas.map(p => `<div class="conta-parcela-row ${Number(p.pago || 0) > 0 ? 'parcial' : 'em_aberto'}"><span><strong>${p.numero}ª parcela</strong><small>Venc. ${formatarDataParcela(p.vencimento)}</small></span><span><strong>${formatarMoeda(p.saldo || 0)}</strong><small>${Number(p.pago || 0) > 0 ? 'Parcial' : 'Em aberto'}</small></span></div>`).join('') : `<div style="padding:10px 12px; color:var(--success); font-weight:700;">Todas as parcelas estão quitadas.</div>`);
+  }
   document.getElementById("pagar-conta-a-receber-valor-pagar").value = (conta.saldoRestante || 0).toFixed(2);
   abrirModal("modal-registrar-pagamento-conta-a-receber");
 }
@@ -2026,14 +2399,32 @@ async function registrarPagamentoContaAReceber() {
   const conta = todasContasAReceber.find(c => c.docId === docId);
   if (!conta) { toast("Conta não encontrada.", "err"); return; }
 
-  if (valorPagar > conta.saldoRestante) {
-    toast("O valor a receber não pode ser superior ao saldo pendente.", "err");
+  const saldoAtual = Number(conta.saldoRestante ?? ((conta.totalAReceber || conta.valorOriginal || 0) - (conta.totalPago || 0)));
+  if (valorPagar > saldoAtual + 0.009) {
+    toast("O valor recebido não pode ser superior ao saldo pendente.", "err");
     return;
   }
 
-  const novoTotalPago = (conta.totalPago || 0) + valorPagar;
-  const novoSaldoRestante = (conta.totalAReceber || conta.valorOriginal) - novoTotalPago;
-  const novoStatusVenda = novoSaldoRestante <= 0 ? "quitada" : "em_aberto";
+  const parcelasAtuais = obterParcelasConta(conta).map(p => ({ ...p }));
+  let restanteRecebido = valorPagar;
+
+  // Distribui o pagamento pelas parcelas mais antigas primeiro.
+  for (const parcela of parcelasAtuais) {
+    if (restanteRecebido <= 0.009) break;
+    const saldoParcela = Number(parcela.saldo ?? Math.max(0, (parcela.valor || 0) - (parcela.pago || 0)));
+    if (saldoParcela <= 0.009) continue;
+
+    const aplicado = Math.min(restanteRecebido, saldoParcela);
+    parcela.pago = Number(((parcela.pago || 0) + aplicado).toFixed(2));
+    parcela.saldo = Number(Math.max(0, (parcela.valor || 0) - parcela.pago).toFixed(2));
+    parcela.status = parcela.saldo <= 0.009 ? "paga" : "parcial";
+    restanteRecebido = Number((restanteRecebido - aplicado).toFixed(2));
+  }
+
+  const novoTotalPago = Number(((conta.totalPago || 0) + valorPagar).toFixed(2));
+  const totalAReceber = Number(conta.totalAReceber || conta.valorOriginal || 0);
+  const novoSaldoRestante = Number(Math.max(0, totalAReceber - novoTotalPago).toFixed(2));
+  const novoStatusVenda = novoSaldoRestante <= 0.009 ? "quitada" : "em_aberto";
 
   const historicoEntry = {
     valor: valorPagar,
@@ -2047,6 +2438,7 @@ async function registrarPagamentoContaAReceber() {
       totalPago: novoTotalPago,
       saldoRestante: novoSaldoRestante,
       statusVenda: novoStatusVenda,
+      parcelas: parcelasAtuais,
       historicoPagamentos: firebase.firestore.FieldValue.arrayUnion(historicoEntry),
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -2419,6 +2811,9 @@ function toast(msg, tipo = "ok") {
 
 // Event Listeners adicionais
 document.addEventListener("DOMContentLoaded", () => {
+  const primeiroVencimentoPdv = document.getElementById("pdv-primeiro-vencimento");
+  if (primeiroVencimentoPdv && !primeiroVencimentoPdv.value) primeiroVencimentoPdv.value = dataPrimeiroVencimentoPadrao();
+
   const inputBusca = document.getElementById("contas-a-receber-search");
   const btnAddConta = document.getElementById("add-conta-manual-btn");
 

@@ -134,6 +134,10 @@
           <i class="fa-solid fa-file-invoice-dollar"></i>
           <span>Financeiro / Cobrança</span>
         </button>
+        <button class="side-btn" data-tab="financiamentos" onclick="mudarTab('financiamentos', this)">
+          <i class="fa-solid fa-building-columns"></i>
+          <span>Financiamentos</span>
+        </button>
         <button class="side-btn" data-tab="relatorio" onclick="mudarTab('relatorio', this)">
           <i class="fa-solid fa-chart-column"></i>
           <span>Relatórios</span>
@@ -413,7 +417,8 @@
                   <option value="dinheiro">À Vista (Dinheiro / Transferência)</option>
                   <option value="pix">PIX</option>
                   <option value="debito">Cartão de Débito</option>
-                  <option value="credito">Cartão de Crédito / Financiamento</option>
+                  <option value="credito">Cartão de Crédito</option>
+                  <option value="financiamento">Financiamento</option>
                   <option value="prazo">A Prazo / Parcelado Próprio</option>
                 </select>
               </div>
@@ -424,14 +429,15 @@
                 Dividir pagamento em 2 formas (ex: Entrada + Parcelado)
               </label>
 
-              <div id="pdv-pagamento2-area" style="display:none; flex-direction:column; gap:12px;">
+              <div id="pdv-pagamento2-area" class="pdv-pagamento2-area">
                 <div class="form-group">
                   <label>2ª Forma de Pagamento</label>
                   <select id="pdv-pagamento2">
                     <option value="dinheiro">À Vista (Dinheiro / Transferência)</option>
                     <option value="pix">PIX</option>
                     <option value="debito">Cartão de Débito</option>
-                    <option value="credito" selected>Cartão de Crédito / Financiamento</option>
+                    <option value="credito" selected>Cartão de Crédito</option>
+                    <option value="financiamento">Financiamento</option>
                     <option value="prazo">A Prazo / Parcelado Próprio</option>
                   </select>
                 </div>
@@ -453,15 +459,35 @@
               </div>
 
               <!-- SIMULADOR A PRAZO -->
-              <div id="pdv-container-a-prazo"
-                style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:var(--radius-sm); margin:10px 0;">
+              <div id="pdv-container-a-prazo" class="pdv-container-a-prazo">
                 <div class="form-group">
+                  <label for="pdv-valor-entrada">Valor da Entrada (R$)</label>
+                  <input type="number" id="pdv-valor-entrada" min="0" step="0.01" value="0" placeholder="0,00"
+                    oninput="calcularSimulacaoParcelas()">
+                </div>
+
+                <div class="form-group pdv-prazo-field">
+                  <label for="pdv-forma-entrada">Forma de Pagamento da Entrada</label>
+                  <select id="pdv-forma-entrada" onchange="calcularSimulacaoParcelas()">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix" selected>PIX</option>
+                    <option value="debito">Cartão de Débito</option>
+                    <option value="credito">Cartão de Crédito</option>
+                  </select>
+                </div>
+
+                <div class="form-group pdv-prazo-field">
                   <label for="pdv-porcentagem-acrescimo">Taxa de Juros / Acréscimo (%)</label>
                   <input type="number" id="pdv-porcentagem-acrescimo" min="0" step="0.1" value="0"
                     oninput="calcularSimulacaoParcelas()">
                 </div>
 
-                <div class="form-group" style="margin-top:10px;">
+                <div class="form-group pdv-prazo-field">
+                  <label for="pdv-primeiro-vencimento">Primeiro Vencimento</label>
+                  <input type="date" id="pdv-primeiro-vencimento" onchange="calcularSimulacaoParcelas()">
+                </div>
+
+                <div class="form-group pdv-prazo-field">
                   <label for="pdv-qtd-parcelas">Número de Parcelas</label>
                   <select id="pdv-qtd-parcelas" onchange="calcularSimulacaoParcelas()">
                     <option value="1">1x (Entrada / 30 dias)</option>
@@ -478,16 +504,68 @@
                   </select>
                 </div>
 
-                <div id="pdv-resumo-parcelamento"
-                  style="background:#0f172a; color:#f8fafc; padding:12px; border-radius:6px; font-weight:bold; margin-top:12px; font-size:0.9rem;">
+                <div id="pdv-resumo-parcelamento" class="pdv-resumo-parcelamento"></div>
+                
+              </div>
+
+              <!-- REGISTRO DE FINANCIAMENTO -->
+              <div id="pdv-container-financiamento" class="pdv-container-financiamento">
+                <div class="form-section-header"><i class="fa-solid fa-building-columns"></i> Financiamento</div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-financeira">Banco / Financeira *</label>
+                  <input type="text" id="pdv-financiamento-financeira" placeholder="Ex: Banco Santander" oninput="calcularResumoFinanciamento()">
                 </div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-entrada">Valor da Entrada (R$)</label>
+                  <input type="number" id="pdv-financiamento-entrada" min="0" step="0.01" value="0" placeholder="0,00" oninput="calcularResumoFinanciamento()">
+                </div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-forma-entrada">Forma da Entrada</label>
+                  <select id="pdv-financiamento-forma-entrada" onchange="calcularResumoFinanciamento()">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix" selected>PIX</option>
+                    <option value="debito">Cartão de Débito</option>
+                    <option value="credito">Cartão de Crédito</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-juros">Taxa de Juros (% ao mês)</label>
+                  <input type="number" id="pdv-financiamento-juros" min="0" step="0.01" value="0" placeholder="Ex: 1,49" oninput="calcularResumoFinanciamento()">
+                </div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-parcelas">Número de Parcelas *</label>
+                  <select id="pdv-financiamento-parcelas" onchange="calcularResumoFinanciamento()">
+                    <option value="12">12x</option>
+                    <option value="24">24x</option>
+                    <option value="36">36x</option>
+                    <option value="48" selected>48x</option>
+                    <option value="60">60x</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="pdv-financiamento-valor-parcela">Valor da Parcela (R$) *</label>
+                  <input type="number" id="pdv-financiamento-valor-parcela" min="0" step="0.01" placeholder="Informado pela financeira" oninput="calcularResumoFinanciamento()">
+                </div>
+
+                <div class="form-group full">
+                  <label for="pdv-financiamento-observacoes">Observações</label>
+                  <textarea id="pdv-financiamento-observacoes" rows="2" placeholder="Ex: Proposta aprovada pela financeira..." oninput="calcularResumoFinanciamento()"></textarea>
+                </div>
+
+                <div id="pdv-resumo-financiamento" class="pdv-resumo-financiamento"></div>
               </div>
 
               <div class="pdv-totals-row"><span>Valor Bruto:</span><span id="pdv-subtotal">R$ 0,00</span></div>
               <div class="pdv-totals-row"><span>Desconto Aplicado:</span><span id="pdv-desconto-total">R$ 0,00</span>
               </div>
               <div class="pdv-totals-row total"><span>Total da Venda:</span><span id="pdv-total">R$ 0,00</span></div>
-              <div id="pdv-split-resumo" style="display:none; flex-direction:column; gap:4px; margin-top:8px;"></div>
+              <div id="pdv-split-resumo" class="pdv-split-resumo"></div>
 
               <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="pdvFinalizarVenda()">
                 <i class="fa-solid fa-check-double"></i> Concluir Negociação
@@ -565,7 +643,22 @@
           </div>
         </div>
 
-        <!-- 7. RELATÓRIO MENSAL -->
+
+        <!-- 7. FINANCIAMENTOS -->
+        <div id="tab-financiamentos" class="tab-panel">
+          <div class="section-header">
+            <div>
+              <h2><i class="fa-solid fa-building-columns" style="color:var(--accent);"></i> Financiamentos</h2>
+              <p>Consulte as vendas financiadas e os principais dados da operação.</p>
+            </div>
+          </div>
+
+          <div id="financiamentos-list-container">
+            <div class="loader"><i class="fa-solid fa-spinner"></i> Carregando financiamentos...</div>
+          </div>
+        </div>
+
+        <!-- 8. RELATÓRIO MENSAL -->
         <div id="tab-relatorio" class="tab-panel">
           <div class="section-header">
             <div>
@@ -1154,9 +1247,13 @@
           <label for="conta-a-receber-valor-pago">Valor Já Amortizado (R$)</label>
           <input type="number" id="conta-a-receber-valor-pago" min="0" step="0.01" placeholder="0.00">
         </div>
-        <div class="form-group full">
+        <div class="form-group">
           <label for="conta-a-receber-parcelas">Número de Parcelas</label>
           <input type="number" id="conta-a-receber-parcelas" min="1" max="60" value="1" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label for="conta-a-receber-primeiro-vencimento">Primeiro Vencimento</label>
+          <input type="date" id="conta-a-receber-primeiro-vencimento">
         </div>
         <div class="form-group full">
           <label for="conta-a-receber-descricao">Descrição / Detalhes do Acordo</label>
@@ -1192,6 +1289,8 @@
           Saldo Devedor Atual: <span id="pagar-conta-a-receber-valor-pendente"></span>
         </p>
       </div>
+
+      <div id="pagar-conta-a-receber-parcelas" class="conta-parcelas-detalhes" style="margin-bottom:16px;"></div>
 
       <div class="form-group">
         <label for="pagar-conta-a-receber-valor-pagar">Valor Recebido Nesta Parcela (R$) *</label>
